@@ -1,0 +1,8 @@
+**This is purely ideas and stuff just listed by the developer during coding**
+
+1. For extra compatability (for example to blender or cura for 3d printing) we can convert the .step to .obj, as they dont accept .step.
+2. We maybe do not charge users for now? - just let them use their own API keys for extra simplicity. 
+3. Parametric history made by us, so after each agent edit, we save the file, so that the user can revert back to the "checkpoint"
+4. We could utilise STEP1X-3D, where we input a picture, then get a 3d model. - maybe for quick prototyping? 
+4.1 User inputs what they want, we genereate a picture via openAI or other provider, then Step1x-3d turns it into 3d, then we convert into .step.
+5. We need to implement a way to generate colors and textures aswell, because python + cadquery doesnt really work for that.  

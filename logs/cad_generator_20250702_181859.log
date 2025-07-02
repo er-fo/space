@@ -1,0 +1,42 @@
+2025-07-02 18:18:59,122 - CADGenerator - INFO - Logging initialized. Log file: logs/cad_generator_20250702_181859.log
+2025-07-02 18:18:59,122 - CADGenerator - INFO - Raw LLM logging enabled. Log file: logs/llm_raw_20250702_181859.log
+2025-07-02 18:18:59,122 - CADGenerator - INFO - Starting model generation workflow for: create a complex house with triangular roof and door
+2025-07-02 18:18:59,122 - CADGenerator - DEBUG - Filename: create_a_complex_house_with_tr
+2025-07-02 18:18:59,122 - CADGenerator - INFO - Step 1: Generating Build123d code
+2025-07-02 18:18:59,122 - CADGenerator - INFO - Generating Build123d code for instruction: create a complex house with triangular roof and door...
+2025-07-02 18:19:05,500 - CADGenerator - DEBUG - Raw code length: 570 characters
+2025-07-02 18:19:05,500 - CADGenerator - DEBUG - Processing markdown code blocks...
+2025-07-02 18:19:05,501 - CADGenerator - DEBUG - Final code length: 570 characters
+2025-07-02 18:19:05,501 - CADGenerator - INFO - Code generation completed successfully
+2025-07-02 18:19:05,501 - CADGenerator - INFO - Step 2: Executing generated code
+2025-07-02 18:19:05,501 - CADGenerator - INFO - Executing Build123d code...
+2025-07-02 18:19:05,501 - CADGenerator - DEBUG - Code to execute (570 chars):
+2025-07-02 18:19:05,501 - CADGenerator - DEBUG - import build123d as bd
+
+# Base house dimensions (all in mm)
+house_base = bd.Box(100, 80, 60)  # 100x80x60mm main structure
+
+# Roof as triangular prism using rotated box
+roof = bd.Box(120, 80, 40).rotate(bd.Axis.Y, 45).translate(bd.Vector(0, 0, 80))
+
+# Door cutout
+door = bd.Box(30, 5, 45).translate(bd.Vector(0, -40, 22.5))
+
+# Windows as box cutouts
+window_left = bd.Box(20, 5, 20).translate(bd.Vector(-25, -40, 35))
+window_right = bd.Box(20, 5, 20).translate(bd.Vector(25, -40, 35))
+
+# Combine all features
+result = house_base + roof - door - window_left - window_right
+2025-07-02 18:19:05,581 - CADGenerator - DEBUG - Code execution completed. Local variables: ['bd', 'house_base', 'roof', 'door', 'window_left', 'window_right', 'result']
+2025-07-02 18:19:05,581 - CADGenerator - DEBUG - Result variable found: <class 'build123d.topology.three_d.Solid'>
+2025-07-02 18:19:05,581 - CADGenerator - DEBUG - Result has 'wrapped' attribute: True
+2025-07-02 18:19:05,581 - CADGenerator - INFO - Code execution successful - valid Build123d object created
+2025-07-02 18:19:05,581 - CADGenerator - INFO - Step 3: Exporting to STEP file
+2025-07-02 18:19:05,581 - CADGenerator - INFO - Exporting model to STEP file: generated_models/create_a_complex_house_with_tr.step
+2025-07-02 18:19:05,581 - CADGenerator - DEBUG - Model type: <class 'build123d.topology.three_d.Solid'>
+2025-07-02 18:19:05,581 - CADGenerator - DEBUG - Output directory exists: True
+2025-07-02 18:19:05,608 - CADGenerator - INFO - STEP export successful: generated_models/create_a_complex_house_with_tr.step
+2025-07-02 18:19:05,608 - CADGenerator - DEBUG - File size: 74256 bytes
+2025-07-02 18:19:05,608 - CADGenerator - INFO - Model generation workflow completed successfully
+2025-07-02 18:19:05,608 - CADGenerator - INFO - Final results: {'instruction': 'create a complex house with triangular roof and door', 'filename': 'create_a_complex_house_with_tr', 'success': True, 'generated_code': 'import build123d as bd\n\n# Base house dimensions (all in mm)\nhouse_base = bd.Box(100, 80, 60)  # 100x80x60mm main structure\n\n# Roof as triangular prism using rotated box\nroof = bd.Box(120, 80, 40).rotate(bd.Axis.Y, 45).translate(bd.Vector(0, 0, 80))\n\n# Door cutout\ndoor = bd.Box(30, 5, 45).translate(bd.Vector(0, -40, 22.5))\n\n# Windows as box cutouts\nwindow_left = bd.Box(20, 5, 20).translate(bd.Vector(-25, -40, 35))\nwindow_right = bd.Box(20, 5, 20).translate(bd.Vector(25, -40, 35))\n\n# Combine all features\nresult = house_base + roof - door - window_left - window_right', 'step_file': 'generated_models/create_a_complex_house_with_tr.step', 'error': None}

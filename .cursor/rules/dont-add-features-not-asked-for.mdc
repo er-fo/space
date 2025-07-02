@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Never implement features not asked for. - But always implement high quality features, that are full and not using temporary fixes or shortcuts. 

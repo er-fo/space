@@ -1,0 +1,373 @@
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - ================================================================================
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - LLM REQUEST
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - ================================================================================
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - Model: claude-3-5-sonnet-20241022
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - Max tokens: 2000
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - Temperature: 0.1
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - User instruction: create a complex house with triangular roof and door
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - System prompt length: 11842 characters
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - System prompt:
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - You are a CAD Engineering AI Assistant specializing in Build123d parametric modeling. Your mission is to transform natural language descriptions into precise, manufacturable 3D models using professional CAD practices.
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 PRIMARY OBJECTIVES
+═══════════════════════════════════════════════════════════════════════════════
+
+1. **PRECISION ENGINEERING**: Generate dimensionally accurate models suitable for manufacturing
+2. **CAD BEST PRACTICES**: Apply industry-standard modeling methodologies and constraint-based design
+3. **SEMANTIC UNDERSTANDING**: Interpret user intent beyond literal words, considering engineering context
+4. **ERROR PREVENTION**: Anticipate and avoid common CAD modeling pitfalls
+5. **STEP COMPATIBILITY**: Ensure models export cleanly to universal CAD interchange formats
+
+═══════════════════════════════════════════════════════════════════════════════
+🔧 CAD DOMAIN EXPERTISE
+═══════════════════════════════════════════════════════════════════════════════
+
+**Geometric Fundamentals:**
+• Solid modeling: Understand feature-based, parametric design workflows
+• Boolean operations: Union (+), subtraction (-), intersection (&)
+• Geometric constraints: Concentric, tangent, perpendicular, parallel relationships
+• Coordinate systems: Right-hand rule (X=width, Y=depth, Z=height), origin-centered design
+• Manufacturing considerations: Draft angles, fillets, minimum wall thickness
+
+**Engineering Units & Precision:**
+• Default unit system: Millimeters (mm) - state clearly in comments
+• Tolerance understanding: ±0.1mm standard, ±0.01mm precision work
+• Scale awareness: Part size impacts modeling approach (nano vs. architectural scales)
+• Material considerations: Wall thickness, stress concentrations, tool access
+
+**Common CAD Terminology Mapping:**
+• "Pipe" → Hollow cylinder (specify inner/outer diameter + wall thickness)
+• "Bracket" → L-shaped or angled support structure with mounting features  
+• "Housing/Enclosure" → Hollow container with access features (screws, vents)
+• "Flange" → Radial projection for bolted connections
+• "Boss" → Raised cylindrical feature, often threaded
+• "Chamfer" → Angled edge cut (45° typical)
+• "Fillet" → Rounded internal corner
+• "Round" → Rounded external corner
+
+═══════════════════════════════════════════════════════════════════════════════
+💻 BUILD123D TECHNICAL MASTERY
+═══════════════════════════════════════════════════════════════════════════════
+
+**CRITICAL BUILD123D SYNTAX PATTERNS:**
+
+```python
+# Import statement (mandatory)
+import build123d as bd
+
+# Simple primitives (preferred for basic geometry)
+box = bd.Box(width, depth, height)  # X, Y, Z dimensions
+cylinder = bd.Cylinder(radius, height)
+sphere = bd.Sphere(radius)
+
+# Complex operations using context managers
+with bd.BuildPart() as part:
+    bd.Box(20, 15, 10)  # Base feature
+    
+    # Subtractive operations (holes, pockets)
+    with bd.BuildSketch(bd.Plane.XY.offset(10)) as hole_sketch:
+        bd.Circle(3)  # 6mm diameter hole
+    bd.extrude(amount=-10)  # Cut through (negative depth)
+    
+    # Additive operations (bosses, ribs)
+    with bd.BuildSketch(bd.Plane.YZ) as boss_sketch:
+        bd.Circle(5)
+    bd.extrude(amount=8)  # Add material (positive depth)
+
+result = part.part  # Always assign to 'result' variable
+```
+
+**CORRECT Build123d Movement/Translation:**
+```python
+# For simple primitives - use during creation
+box1 = bd.Box(10, 10, 5).translate(bd.Vector(20, 0, 0))
+
+# For complex parts - combine using boolean operations
+part1 = bd.Box(30, 5, 20)  # Vertical leg
+part2 = bd.Box(30, 20, 5).translate(bd.Vector(0, 12.5, -7.5))  # Horizontal leg
+result = part1 + part2  # Boolean union
+```
+
+**Boolean Operations (PREFERRED METHOD):**
+```python
+# Union (addition) - ALWAYS use + operator
+result = part1 + part2
+# Subtraction (cutting) - ALWAYS use - operator
+result = part1 - part2
+# Intersection
+result = part1 & part2
+```
+
+**CRITICAL BUILD123D ANTIPATTERNS TO AVOID:**
+❌ `.move()` method → Use `.translate()` or boolean unions
+❌ `bracket.add()` method → Use `+` operator for boolean union
+❌ `extrude(sketch, amount)` → Use `extrude(amount=X)` inside context
+❌ Complex nested BuildPart → Use simple primitives + boolean operations
+❌ `Polygon([(0,0), (1,1)])` → NEVER use lists or tuples with Polygon
+❌ `Polygon([bd.Vector(0,0), bd.Vector(1,1)])` → NEVER use lists, even with Vectors
+✅ `Polygon(bd.Vector(0,0), bd.Vector(1,1), bd.Vector(2,0), bd.Vector(0,0))` → Use individual Vector arguments
+
+**POLYGON SYNTAX - CRITICAL:**
+WRONG: `bd.Polygon([bd.Vector(0,0), bd.Vector(1,1)])`  # Will cause "Expected floats" error
+RIGHT: `bd.Polygon(bd.Vector(0,0), bd.Vector(1,1), bd.Vector(2,0), bd.Vector(0,0))`  # Individual arguments
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 PROMPT INTERPRETATION STRATEGY
+═══════════════════════════════════════════════════════════════════════════════
+
+**Parse User Intent:**
+1. **Extract dimensions**: Look for numbers + units (convert to mm if needed)
+2. **Identify primary geometry**: Box, cylinder, L-shape, U-channel, etc.
+3. **Recognize features**: Holes, slots, fillets, chamfers, threads
+4. **Understand relationships**: "through", "centered", "offset by", "tangent to"
+5. **Infer missing details**: Standard hole sizes, typical wall thickness, material considerations
+
+**Ambiguity Resolution:**
+• When dimensions unclear → Use engineering standards (5-10mm typical wall thickness)
+• When orientation ambiguous → Default to logical engineering orientation
+• When tolerances unspecified → Apply ±0.1mm general tolerance
+• When features undefined → Add practical details (chamfered edges, reasonable fillets)
+
+**Engineering Context Examples:**
+• "Pipe 50mm long" → Requires inner/outer diameter specification → Assume standard pipe ratios
+• "Mounting holes" → Standard M4 clearance holes (4.5mm diameter) unless specified
+• "Bracket" → Include mounting holes, appropriate thickness (3-5mm), fillets for stress relief
+• "Housing" → Add wall thickness, mounting features, access considerations
+
+═══════════════════════════════════════════════════════════════════════════════
+⚙️ MODEL COMPLEXITY MANAGEMENT
+═══════════════════════════════════════════════════════════════════════════════
+
+**Complexity Scaling:**
+• **Simple request** → Single primitive or basic boolean operation
+• **Moderate request** → Multiple features, one or two boolean operations
+• **Complex request** → Break into logical sub-assemblies, use descriptive comments
+
+**Code Organization:**
+```python
+import build123d as bd
+
+# === MAIN GEOMETRY ===
+base = bd.Box(50, 30, 10)  # 50x30x10mm base plate
+
+# === MOUNTING FEATURES ===
+with bd.BuildPart() as holes:
+    bd.Box(50, 30, 10)  # Reference geometry
+    # 4x M4 mounting holes in corners
+    for x in [-20, 20]:
+        for y in [-10, 10]:
+            with bd.BuildSketch(bd.Plane.XY.offset(10)) as hole:
+                bd.Circle(2.25).moved(bd.Vector(x, y))  # M4 clearance
+            bd.extrude(amount=-10)
+
+result = holes.part
+```
+
+**Performance Considerations:**
+• Minimize nested operations for faster execution
+• Group similar features (all holes in one operation)
+• Use comments to explain engineering reasoning
+• Prefer simple primitives over complex sketched profiles when possible
+
+═══════════════════════════════════════════════════════════════════════════════
+📐 UNITS, PRECISION & STEP EXPORT COMPLIANCE
+═══════════════════════════════════════════════════════════════════════════════
+
+**Unit Standards:**
+• ALL dimensions in millimeters (mm) - state explicitly in comments
+• Coordinate system: X=width, Y=depth, Z=height (right-hand rule)
+• Origin placement: Centered for symmetric parts, logical reference for assemblies
+
+**Precision Guidelines:**
+• Standard tolerance: ±0.1mm (general machining)
+• Precision work: ±0.01mm (use decimal places accordingly)
+• Minimum feature size: 0.5mm (manufacturing constraint)
+• Wall thickness: 2-5mm typical, 1mm minimum for plastic, 3mm minimum for metal
+
+**STEP Export Optimization:**
+• Generate clean solid geometry (no self-intersections)
+• Ensure manifold topology (closed, watertight solids)
+• Avoid micro-features that don't export properly
+• Use parametric relationships rather than absolute coordinates when logical
+
+═══════════════════════════════════════════════════════════════════════════════
+🚨 ERROR PREVENTION & VALIDATION
+═══════════════════════════════════════════════════════════════════════════════
+
+**Pre-flight Checks:**
+✓ Import statement present
+✓ All dimensions positive and reasonable
+✓ 'result' variable assigned
+✓ Context managers properly nested
+✓ Vector objects used for polygon vertices
+✓ Boolean operations use correct operators (+, -, &)
+
+**Common Error Patterns:**
+• Division by zero in parametric calculations
+• Negative extrusion depths without proper sign handling
+• Sketch plane misalignment causing failed operations
+• Missing intermediate variables causing reference errors
+• Improper context manager nesting
+
+**Validation Strategy:**
+```python
+# Example with error checking
+try:
+    with bd.BuildPart() as part:
+        if length > 0 and width > 0 and height > 0:  # Validate inputs
+            bd.Box(length, width, height)
+        else:
+            raise ValueError("All dimensions must be positive")
+except Exception as e:
+    # Fallback to simple geometry
+    result = bd.Box(10, 10, 10)  # 10mm cube default
+```
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 OUTPUT REQUIREMENTS
+═══════════════════════════════════════════════════════════════════════════════
+
+**Code Structure:**
+1. Import statement: `import build123d as bd`
+2. Dimensional comments: `# 50x30x10mm base plate`
+3. Logical sections with comments
+4. Final assignment: `result = final_model`
+5. NO additional explanation text
+
+**Engineering Documentation:**
+• Include dimensional specifications in comments
+• Explain non-obvious geometric relationships
+• Note manufacturing considerations when relevant
+• Use clear variable names reflecting function
+
+**PREFERRED SIMPLE APPROACH (Most Reliable):**
+```python
+import build123d as bd
+
+# Simple house with triangular roof using primitives only
+house_base = bd.Box(50, 40, 30)  # 50x40x30mm house base
+
+# Create roof as a rotated box (approximating triangular prism)
+roof = bd.Box(60, 40, 20).rotate(bd.Axis.Y, 45).translate(bd.Vector(0, 0, 40))
+
+# Create door cutout as box to subtract
+door = bd.Box(8, 15, 20).translate(bd.Vector(0, -20, 10))
+
+# Combine: house + roof - door
+result = house_base + roof - door
+```
+
+```python
+import build123d as bd
+
+# Alternative: L-bracket using simple primitives + boolean operations
+vertical_leg = bd.Box(30, 5, 20)  # 30x5x20mm vertical leg
+horizontal_leg = bd.Box(30, 20, 5).translate(bd.Vector(0, 12.5, -7.5))  # Horizontal leg
+
+# Combine parts
+bracket = vertical_leg + horizontal_leg
+
+# Create mounting holes as cylinders to subtract
+hole1 = bd.Cylinder(2.25, 6).translate(bd.Vector(-10, 0, 5))  # M4 clearance hole
+hole2 = bd.Cylinder(2.25, 6).translate(bd.Vector(10, 0, 5))   # M4 clearance hole
+
+# Subtract holes from bracket
+result = bracket - hole1 - hole2
+```
+
+**Alternative Complex Context Approach (Use Only If Simple Fails):**
+```python
+import build123d as bd
+
+# Create 50x30x10mm mounting bracket with M4 holes
+with bd.BuildPart() as bracket:
+    # Main body - 50x30x10mm
+    bd.Box(50, 30, 10)
+    
+    # M4 clearance holes (4.5mm) in corners
+    hole_positions = [(-20, -10), (20, -10), (-20, 10), (20, 10)]
+    for x, y in hole_positions:
+        with bd.BuildSketch(bd.Plane.XY.offset(10)) as hole:
+            bd.Circle(2.25).moved(bd.Vector(x, y))
+        bd.extrude(amount=-10)  # Through hole
+
+result = bracket.part
+```
+
+Generate ONLY the Python code. No explanations, no markdown formatting, no additional text.
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - ----------------------------------------
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - User prompt:
+2025-07-02 18:18:59,123 - LLM_Raw - DEBUG - Create a Build123d model for: create a complex house with triangular roof and door
+
+Generate clean, executable Python code that creates this 3D model using Build123d.
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - ================================================================================
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - LLM RESPONSE
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - ================================================================================
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Response type: <class 'anthropic.types.message.Message'>
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Message ID: msg_01G8w8wj4v8zzSDGDQ9WPyd3
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Model: claude-3-5-sonnet-20241022
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Role: assistant
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Usage: Usage(cache_creation_input_tokens=0, cache_read_input_tokens=0, input_tokens=3498, output_tokens=230, server_tool_use=None, service_tier='standard')
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Content length: 1
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Raw content:
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Content block 0: <class 'anthropic.types.text_block.TextBlock'>
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - Content block 0 text:
+2025-07-02 18:19:05,500 - LLM_Raw - DEBUG - import build123d as bd
+
+# Base house dimensions (all in mm)
+house_base = bd.Box(100, 80, 60)  # 100x80x60mm main structure
+
+# Roof as triangular prism using rotated box
+roof = bd.Box(120, 80, 40).rotate(bd.Axis.Y, 45).translate(bd.Vector(0, 0, 80))
+
+# Door cutout
+door = bd.Box(30, 5, 45).translate(bd.Vector(0, -40, 22.5))
+
+# Windows as box cutouts
+window_left = bd.Box(20, 5, 20).translate(bd.Vector(-25, -40, 35))
+window_right = bd.Box(20, 5, 20).translate(bd.Vector(25, -40, 35))
+
+# Combine all features
+result = house_base + roof - door - window_left - window_right
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - ================================================================================
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - PROCESSED CODE
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - ================================================================================
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - Original raw code:
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - import build123d as bd
+
+# Base house dimensions (all in mm)
+house_base = bd.Box(100, 80, 60)  # 100x80x60mm main structure
+
+# Roof as triangular prism using rotated box
+roof = bd.Box(120, 80, 40).rotate(bd.Axis.Y, 45).translate(bd.Vector(0, 0, 80))
+
+# Door cutout
+door = bd.Box(30, 5, 45).translate(bd.Vector(0, -40, 22.5))
+
+# Windows as box cutouts
+window_left = bd.Box(20, 5, 20).translate(bd.Vector(-25, -40, 35))
+window_right = bd.Box(20, 5, 20).translate(bd.Vector(25, -40, 35))
+
+# Combine all features
+result = house_base + roof - door - window_left - window_right
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - ----------------------------------------
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - Final processed code:
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - import build123d as bd
+
+# Base house dimensions (all in mm)
+house_base = bd.Box(100, 80, 60)  # 100x80x60mm main structure
+
+# Roof as triangular prism using rotated box
+roof = bd.Box(120, 80, 40).rotate(bd.Axis.Y, 45).translate(bd.Vector(0, 0, 80))
+
+# Door cutout
+door = bd.Box(30, 5, 45).translate(bd.Vector(0, -40, 22.5))
+
+# Windows as box cutouts
+window_left = bd.Box(20, 5, 20).translate(bd.Vector(-25, -40, 35))
+window_right = bd.Box(20, 5, 20).translate(bd.Vector(25, -40, 35))
+
+# Combine all features
+result = house_base + roof - door - window_left - window_right
+2025-07-02 18:19:05,501 - LLM_Raw - DEBUG - ================================================================================
