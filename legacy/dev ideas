@@ -1,0 +1,17 @@
+**This is purely ideas and stuff just listed by the developer during coding**
+
+###THESE ARE PURELY FOR IDEAS, NOTHING TO BE IMPLEMENTED BEFORE DEVELOPER APPROVAL###
+
+1. For extra compatability (for example to blender or cura for 3d printing) we can convert the .step to .obj, as they dont accept .step.
+2. We maybe do not charge users for now? - just let them use their own API keys for extra simplicity. 
+3. Parametric history made by us, so after each agent edit, we save the file, so that the user can revert back to the "checkpoint"
+4. We could utilise STEP1X-3D, where we input a picture, then get a 3d model. - maybe for quick prototyping? 
+4.1 User inputs what they want, we genereate a picture via openAI or other provider, then Step1x-3d turns it into 3d, then we convert into .step.
+5. We need to implement a way to generate colors and textures aswell, because python + cadquery doesnt really work for that.  
+6. Offer simple demo on website, separate to downloadable application, user inputs prompt: prompt, output generates. - stops there. 
+7. **HYBRID STEP REVERSE ENGINEERING WORKFLOW**: Handle external CAD files (STEP/IGES) when user has non-Python created models:
+   7.1 Phase 1: Basic STEP→Python conversion using geometric analysis (bounding boxes, feature detection for holes/bosses/fillets)
+   7.2 Phase 2: Context gathering - ask user "What are you building?" + LLM reviews generated Python + user intent
+   7.3 Phase 3: Generate 3-4 intelligent MCQs based on detected geometry (e.g., "Are these mounting holes?", "Should angle be parametric?")
+   7.4 Phase 4: LLM synthesizes geometry + context + MCQ answers → enhanced parametric Python code
+   7.5 This creates a bridge from static external CAD files back into our editable Python ecosystem 
