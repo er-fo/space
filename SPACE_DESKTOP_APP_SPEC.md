@@ -1427,40 +1427,578 @@ space-desktop/
 
 ### 5.1 Fusion 360 Add-in Integration
 
-#### Installation Process
+#### Critical Implementation Considerations
+
+**Threading Model & Non-Blocking Operations**
+
+- **Run network and file‑watch I/O off the main thread.**  
+  Use Python's `threading.Thread` or `asyncio` so Fusion's UI never blocks.  
+  In your worker loop, replace `time.sleep()` busy‑loops with `queue.get(timeout=…)` or `select()` timeouts.
+
 ```python
-# Auto-detection and installation workflow
-def install_fusion_addon():
-    # 1. Detect Fusion 360 installation
-    fusion_path = detect_fusion_installation()
+# Fusion 360 Add-in with proper threading
+import threading
+import queue
+import time
+from typing import Optional
+
+class SpaceCADAddin:
+    def __init__(self):
+        self.websocket_client: Optional[WebSocketClient] = None
+        self.message_queue = queue.Queue()
+        self.fusion_thread = threading.current_thread()
+        self.running = False
+        
+    def start(self):
+        """Start the add-in with proper thread management"""
+        self.running = True
+        
+        # Start WebSocket in background thread
+        self.websocket_thread = threading.Thread(
+            target=self._websocket_worker,
+            daemon=True
+        )
+        self.websocket_thread.start()
+        
+        # Register timer for processing messages in main thread
+        app = adsk.core.Application.get()
+        app.registerCustomEvent('SpaceCAD_ProcessMessage')
+        
+    def _websocket_worker(self):
+        """Background thread for WebSocket communication"""
+        while self.running:
+            try:
+                if not self.websocket_client or not self.websocket_client.is_connected():
+                    self._reconnect_websocket()
+                
+                # Non-blocking message receive
+                message = self.websocket_client.receive_nowait()
+                if message:
+                    # Queue message for main thread processing
+                    self.message_queue.put(message)
+                    
+                    # Fire custom event to process in main thread
+                    app = adsk.core.Application.get()
+                    app.fireCustomEvent('SpaceCAD_ProcessMessage')
+                    
+                time.sleep(0.1)  # Small delay to prevent busy waiting
+                
+            except Exception as e:
+                self._log_error(f"WebSocket worker error: {e}")
+                time.sleep(1)  # Wait before retry
     
-    # 2. Locate AddIns directory
-    addins_dir = fusion_path / "API" / "AddIns"
-    
-    # 3. Copy Space add-in files
-    source = app_path / "fusion_addon"
-    target = addins_dir / "SpaceCAD"
-    shutil.copytree(source, target, dirs_exist_ok=True)
-    
-    # 4. Register add-in with Fusion 360
-    register_addon_in_fusion()
-    
-    # 5. Signal Fusion to reload add-ins
-    signal_fusion_reload()
+    def _reconnect_websocket(self):
+        """Exponential backoff reconnection logic"""
+        max_attempts = 10
+        base_delay = 1
+        
+        for attempt in range(max_attempts):
+            try:
+                self.websocket_client = WebSocketClient("ws://localhost:8000/ws")
+                self.websocket_client.connect()
+                self._log_info("WebSocket reconnected successfully")
+                return
+                
+            except Exception as e:
+                delay = min(base_delay * (2 ** attempt), 60)  # Max 60s delay
+                self._log_warning(f"Reconnect attempt {attempt + 1} failed, retrying in {delay}s: {e}")
+                time.sleep(delay)
+        
+        self._log_error("Max reconnection attempts reached")
 ```
 
-#### Communication Protocol
+**Dependency Management for Fusion's Python Environment**
+
+- **Vendor your WebSocket client**  
+  Include a pure‑Python implementation (e.g. `websocket-client`) in `fusion_addon/dependencies`.  
+  Ensure `sys.path.insert(0, dependencies_path)` runs before any imports.
+
 ```python
-# WebSocket message format between Space and Fusion
-{
-    "type": "reload_model",
-    "payload": {
-        "file_path": "/path/to/updated/model.step",
-        "workspace_id": "current_workspace_guid",
-        "timestamp": "2024-01-01T12:00:00Z"
-    }
-}
+# fusion_addon/dependencies/websocket_simple.py
+# Lightweight WebSocket implementation without external dependencies
+import socket
+import base64
+import hashlib
+import struct
+import threading
+
+class SimpleWebSocketClient:
+    """Minimal WebSocket client using only standard library"""
+    
+    def __init__(self, url: str):
+        self.url = url
+        self.socket = None
+        self.connected = False
+        
+    def connect(self):
+        """Connect using standard socket with WebSocket handshake"""
+        # Parse URL
+        host, port, path = self._parse_url(self.url)
+        
+        # Create socket connection
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((host, port))
+        
+        # Perform WebSocket handshake
+        self._perform_handshake(host, path)
+        self.connected = True
+    
+    def _perform_handshake(self, host: str, path: str):
+        """WebSocket handshake implementation"""
+        key = base64.b64encode(os.urandom(16)).decode()
+        
+        handshake = (
+            f"GET {path} HTTP/1.1\r\n"
+            f"Host: {host}\r\n"
+            f"Upgrade: websocket\r\n"
+            f"Connection: Upgrade\r\n"
+            f"Sec-WebSocket-Key: {key}\r\n"
+            f"Sec-WebSocket-Version: 13\r\n"
+            f"\r\n"
+        )
+        
+        self.socket.send(handshake.encode())
+        response = self.socket.recv(1024).decode()
+        
+        if "101 Switching Protocols" not in response:
+            raise Exception("WebSocket handshake failed")
+    
+    def send_message(self, message: str):
+        """Send WebSocket text message"""
+        if not self.connected:
+            raise Exception("Not connected")
+            
+        payload = message.encode('utf-8')
+        frame = self._create_frame(payload)
+        self.socket.send(frame)
+    
+    def receive_nowait(self) -> Optional[str]:
+        """Non-blocking message receive"""
+        if not self.connected:
+            return None
+            
+        try:
+            self.socket.settimeout(0.1)  # Short timeout for non-blocking
+            data = self.socket.recv(1024)
+            if data:
+                return self._parse_frame(data)
+        except socket.timeout:
+            pass  # No data available
+        except Exception as e:
+            self.connected = False
+            raise e
+        
+        return None
 ```
+
+**Race Condition Prevention for File Operations**
+```python
+# space-desktop/backend/services/file_watcher.py
+import time
+import os
+from pathlib import Path
+from typing import Dict, Optional
+
+class RobustFileWatcher:
+    def __init__(self):
+        self.file_states: Dict[str, dict] = {}
+        self.stability_delay = 0.5  # 500ms stability check
+        
+    def on_file_modified(self, file_path: str):
+        """Handle file modification with race condition protection"""
+        if not file_path.endswith(('.step', '.stp', '.f3d')):
+            return
+            
+        # Start stability monitoring
+        self._monitor_file_stability(file_path)
+    
+    def _monitor_file_stability(self, file_path: str):
+        """Ensure file write is complete before processing"""
+        def check_stability():
+            try:
+                current_size = os.path.getsize(file_path)
+                current_mtime = os.path.getmtime(file_path)
+                
+                # Wait for stability
+                time.sleep(self.stability_delay)
+                
+                # Check if file is still changing
+                new_size = os.path.getsize(file_path)
+                new_mtime = os.path.getmtime(file_path)
+                
+                if current_size == new_size and current_mtime == new_mtime:
+                    # File is stable, safe to process
+                    self._process_stable_file(file_path)
+                else:
+                    # File still changing, wait more
+                    threading.Timer(self.stability_delay, check_stability).start()
+                    
+            except (OSError, FileNotFoundError):
+                # File might be locked or deleted, skip this update
+                pass
+        
+        # Start stability check in background
+        threading.Timer(0.1, check_stability).start()
+    
+    def _process_stable_file(self, file_path: str):
+        """Process file once it's confirmed stable"""
+        try:
+            # Verify file can be opened (not locked)
+            with open(file_path, 'rb') as f:
+                f.read(1)  # Try to read first byte
+            
+            # File is accessible, send reload command
+            self._send_reload_command(file_path)
+            
+        except (OSError, PermissionError):
+            # File still locked, retry later
+            threading.Timer(self.stability_delay, 
+                          lambda: self._process_stable_file(file_path)).start()
+```
+
+**Component Tracking & Metadata Management**
+
+- **Store each metadata field separately**  
+  ```python
+  comp.attributes.add("SpaceCAD", "model_id", space_model_id)
+  comp.attributes.add("SpaceCAD", "source_file", file_path)
+  comp.attributes.add("SpaceCAD", "schema_version", "v1")
+  ```
+
+```python
+# fusion_addon/handlers/model_manager.py
+import json
+import adsk.core
+import adsk.fusion
+from typing import Dict, Optional, Any
+
+class FusionModelManager:
+    def __init__(self):
+        self.tracked_components: Dict[str, str] = {}  # space_id -> occurrence_id
+        self.metadata_attribute = "SpaceCAD_Metadata"
+        
+    def import_or_update_model(self, file_path: str, space_model_id: str):
+        """Import new model or update existing one with proper tracking"""
+        app = adsk.core.Application.get()
+        design = adsk.fusion.Design.cast(app.activeProduct)
+        
+        if not design:
+            raise Exception("No active design found")
+        
+        # Check if this model was previously imported
+        existing_occurrence = self._find_tracked_occurrence(space_model_id)
+        
+        if existing_occurrence:
+            self._update_existing_model(existing_occurrence, file_path)
+        else:
+            self._import_new_model(file_path, space_model_id)
+    
+    def _find_tracked_occurrence(self, space_model_id: str) -> Optional[adsk.fusion.Occurrence]:
+        """Find occurrence by Space model ID using metadata"""
+        app = adsk.core.Application.get()
+        design = adsk.fusion.Design.cast(app.activeProduct)
+        
+        for occurrence in design.rootComponent.allOccurrences:
+            metadata = self._get_occurrence_metadata(occurrence)
+            if metadata and metadata.get('space_model_id') == space_model_id:
+                return occurrence
+        
+        return None
+    
+    def _update_existing_model(self, occurrence: adsk.fusion.Occurrence, file_path: str):
+        """Replace existing model while preserving user modifications"""
+        try:
+            # Get current transform and visibility state
+            transform = occurrence.transform
+            is_visible = occurrence.isVisible
+            
+            # Store user-made modifications (if any)
+            user_features = self._extract_user_features(occurrence)
+            
+            # Import new model to temporary component
+            temp_component = self._import_to_temp_component(file_path)
+            
+            # Replace the component reference
+            occurrence.component = temp_component
+            occurrence.transform = transform
+            occurrence.isVisible = is_visible
+            
+            # Restore user modifications if possible
+            self._restore_user_features(occurrence, user_features)
+            
+            self._log_info(f"Updated model: {occurrence.name}")
+            
+        except Exception as e:
+            self._log_error(f"Failed to update model: {e}")
+            raise
+    
+    def _import_new_model(self, file_path: str, space_model_id: str):
+        """Import new model with proper metadata tagging"""
+        app = adsk.core.Application.get()
+        design = adsk.fusion.Design.cast(app.activeProduct)
+        
+        # Import STEP file
+        import_manager = app.importManager
+        step_options = import_manager.createSTEPImportOptions(file_path)
+        step_options.isViewFit = False  # Don't auto-fit view
+        
+        # Import to new component
+        import_manager.importToNewComponent(step_options, design.rootComponent)
+        
+        # Get the newly created occurrence
+        new_occurrence = design.rootComponent.occurrences.item(
+            design.rootComponent.occurrences.count - 1
+        )
+        
+        # Add metadata for tracking - Store each metadata field separately
+        new_occurrence.component.attributes.add("SpaceCAD", "model_id", space_model_id)
+        new_occurrence.component.attributes.add("SpaceCAD", "source_file", file_path)
+        new_occurrence.component.attributes.add("SpaceCAD", "schema_version", "v1")
+        self._log_info(f"Imported new model: {new_occurrence.name}")
+    
+    def _get_occurrence_metadata(self, occurrence: adsk.fusion.Occurrence) -> Optional[Dict[str, Any]]:
+        """Get Space metadata from occurrence"""
+        try:
+            if occurrence.component.attributes.itemByName("SpaceCAD", self.metadata_attribute):
+                attr = occurrence.component.attributes.itemByName("SpaceCAD", self.metadata_attribute)
+                return json.loads(attr.value)
+        except:
+            pass
+        return None
+    
+    def _set_occurrence_metadata(self, occurrence: adsk.fusion.Occurrence, metadata: Dict[str, Any]):
+        """Set Space metadata on occurrence"""
+        try:
+            # Remove existing metadata
+            existing = occurrence.component.attributes.itemByName("SpaceCAD", self.metadata_attribute)
+            if existing:
+                existing.deleteMe()
+            
+            # Add new metadata
+            occurrence.component.attributes.add("SpaceCAD", self.metadata_attribute, json.dumps(metadata))
+        except Exception as e:
+            self._log_error(f"Failed to set metadata: {e}")
+```
+
+**Fusion 360 API Methods Used**
+
+```python
+# Recommended update flow:
+new_occ = parent_comp.occurrences.addExistingComponent(new_comp, old_occ.transform)
+new_occ.isVisible = old_occ.isVisible
+old_occ.deleteMe()
+```
+
+**Enhanced Error Handling & Fallback Mechanisms**
+```python
+# fusion_addon/handlers/connection_manager.py
+class ConnectionManager:
+    def __init__(self):
+        self.connection_attempts = 0
+        self.max_attempts = 10
+        self.fallback_mode = False
+        self.fallback_interval = 5  # seconds
+        
+    def start_connection(self):
+        """Start connection with multiple fallback strategies"""
+        try:
+            # Primary: WebSocket on default port
+            self._try_websocket_connection(8000)
+        except Exception as e:
+            self._log_warning(f"Primary WebSocket failed: {e}")
+            self._try_fallback_strategies()
+    
+    def _try_fallback_strategies(self):
+        """Try alternative connection methods"""
+        strategies = [
+            lambda: self._try_websocket_connection(8001),  # Alternative port
+            lambda: self._try_websocket_connection(8080),  # Common alternative
+            self._try_http_polling,                        # HTTP fallback
+            self._try_file_polling                         # File-based fallback
+        ]
+        
+        for strategy in strategies:
+            try:
+                strategy()
+                return  # Success
+            except Exception as e:
+                self._log_warning(f"Fallback strategy failed: {e}")
+                continue
+        
+        # All strategies failed
+        self._enter_offline_mode()
+
+**Connection Fallback Strategies**
+
+### HTTP Polling Fallback  
+```python
+def _try_http_polling(self):
+    # every 500 ms, GET http://localhost:8000/poll
+    # if response['type']=='reload_model': self._on_message_received(response)
+```
+### File‑Polling Fallback  
+```python
+def _try_file_polling(self):
+    # check timestamp of a watch file on disk every 1 s
+    # parse JSON payload and call _on_message_received
+```
+    
+    def _try_http_polling(self):
+        """HTTP polling fallback for corporate environments"""
+        import urllib.request
+        import urllib.error
+        
+        def poll_worker():
+            while self.fallback_mode:
+                try:
+                    url = "http://localhost:8000/api/fusion/poll"
+                    response = urllib.request.urlopen(url, timeout=5)
+                    data = json.loads(response.read().decode())
+                    
+                    if data.get('messages'):
+                        for message in data['messages']:
+                            self.message_queue.put(message)
+                            
+                except urllib.error.URLError:
+                    pass  # Server not available
+                except Exception as e:
+                    self._log_error(f"HTTP polling error: {e}")
+                
+                time.sleep(self.fallback_interval)
+        
+        self.fallback_mode = True
+        threading.Thread(target=poll_worker, daemon=True).start()
+        self._log_info("Using HTTP polling fallback")
+    
+    def _try_file_polling(self):
+        """File-based communication fallback"""
+        import tempfile
+        import os
+        
+        self.command_file = os.path.join(tempfile.gettempdir(), "space_fusion_commands.json")
+        self.response_file = os.path.join(tempfile.gettempdir(), "space_fusion_responses.json")
+        
+        def file_poll_worker():
+            last_modified = 0
+            
+            while self.fallback_mode:
+                try:
+                    if os.path.exists(self.command_file):
+                        current_modified = os.path.getmtime(self.command_file)
+                        
+                        if current_modified > last_modified:
+                            with open(self.command_file, 'r') as f:
+                                commands = json.load(f)
+                            
+                            for command in commands:
+                                self.message_queue.put(command)
+                            
+                            last_modified = current_modified
+                            
+                            # Clear processed commands
+                            with open(self.command_file, 'w') as f:
+                                json.dump([], f)
+                                
+                except Exception as e:
+                    self._log_error(f"File polling error: {e}")
+                
+                time.sleep(1)  # Check every second
+        
+        self.fallback_mode = True
+        threading.Thread(target=file_poll_worker, daemon=True).start()
+        self._log_info("Using file-based communication fallback")
+```
+
+**Version Compatibility & Installation Management**
+
+- **Probe for feature availability**  
+  ```python
+  try:
+      import_manager.createSTEPImportOptions
+  except AttributeError:
+      ui.messageBox("Your Fusion version is unsupported.")
+  ```
+
+```python
+# space-desktop/backend/services/fusion_installer.py
+class FusionInstaller:
+    def __init__(self):
+        self.supported_versions = ['2023.1', '2024.1', '2024.2', '2025.1']
+        self.min_required_version = '2023.1'
+        
+    def install_addon_with_compatibility_check(self):
+        """Install add-in with version compatibility verification"""
+        try:
+            fusion_info = self._detect_fusion_installation()
+            
+            if not fusion_info:
+                raise Exception("Fusion 360 not found")
+            
+            # Check version compatibility
+            if not self._is_version_compatible(fusion_info['version']):
+                self._handle_incompatible_version(fusion_info['version'])
+                return False
+            
+            # Install add-in
+            success = self._install_addon_files(fusion_info['path'])
+            
+            if success:
+                # Create version tracking file
+                self._create_version_tracker(fusion_info)
+                self._log_info(f"Add-in installed for Fusion {fusion_info['version']}")
+                return True
+            
+        except Exception as e:
+            self._log_error(f"Installation failed: {e}")
+            return False
+    
+    def _is_version_compatible(self, version: str) -> bool:
+        """Check if Fusion version is compatible"""
+        try:
+            major, minor = version.split('.')[:2]
+            min_major, min_minor = self.min_required_version.split('.')[:2]
+            
+            if major > min_major:
+                return True
+            elif major == min_major and minor >= min_minor:
+                return True
+            else:
+                return False
+                
+        except Exception:
+            return False  # Assume incompatible if can't parse
+    
+    def _handle_incompatible_version(self, version: str):
+        """Handle incompatible Fusion version"""
+        message = (
+            f"Fusion 360 version {version} is not supported.\n"
+            f"Minimum required version: {self.min_required_version}\n"
+            f"Please update Fusion 360 or contact support."
+        )
+        
+        # Show user-friendly error
+        self._show_compatibility_dialog(message)
+        
+    def check_for_fusion_updates(self):
+        """Check if Fusion was updated and add-in needs reinstall"""
+        try:
+            current_fusion = self._detect_fusion_installation()
+            tracked_version = self._get_tracked_version()
+            
+            if not tracked_version or current_fusion['version'] != tracked_version:
+                self._log_info("Fusion 360 version changed, reinstalling add-in")
+                return self.install_addon_with_compatibility_check()
+                
+        except Exception as e:
+            self._log_error(f"Update check failed: {e}")
+            
+        return True
+```
+
+**Deployment & UX**
+
+- **Show real‑time status**  
+  Use `ui.palettes.add()` or status bar text to display "Connected," "Reloading…," or error messages instead of silent logs.
 
 ### 5.2 File Monitoring System
 
@@ -1478,6 +2016,11 @@ class WorkspaceMonitor:
 ```
 
 #### File Change Handling
+
+- **Delay reload until file write stabilizes**  
+  On each change event, start/reset a 500 ms timer. Only trigger reload when file size and mtime are unchanged for the full window.  
+  For very large STEP files, double the window or apply exponential back‑off if stability fails repeatedly.
+
 ```python
 # Debounced file change processing
 class FileWatcher:
@@ -1520,6 +2063,12 @@ const authFlow = {
     }
 };
 ```
+
+**Lifecycle & Cleanup**
+
+- **Tear down threads and events**  
+  On stop(), call `stop_event.set()`, `websocket_client.close()`, and `thread.join(timeout=2)`.  
+  Mirror every `registerCustomEvent` with `unregisterCustomEvent`.
 
 ---
 
