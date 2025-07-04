@@ -46,17 +46,15 @@
         
         .header {
             text-align: center;
-            padding: 5rem 2rem 4rem;
+            padding: 4rem 2rem;
         }
 
-        .logo-container {
-            margin-bottom: 1.5rem;
-        }
-        
-        .logo {
-            max-width: 350px;
-            width: 100%;
-            height: auto;
+        .main-title {
+            font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+            margin-bottom: 1rem;
         }
         
         .tagline {
@@ -207,14 +205,31 @@
 <body>
     <div class="header">
         <div class="container">
-            <div class="logo-container">
-                <img src="logotype.png" alt="CADagent PRO Logo" class="logo">
-            </div>
+            <h1 class="main-title">CADAgent PRO</h1>
             <p class="tagline">Stop Clicking. Start Designing.</p>
             <p class="problem">The AI assistant that turns your text into 3D models, right inside your existing CAD software.</p>
         </div>
     </div>
         
+    <div class="features-section">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h3>Natural Language Engine</h3>
+                    <p>Describe complex operations in plain English. Our AI understands your intent and executes precise modeling tasks.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Seamless Integration</h3>
+                    <p>Works as a native panel inside your favorite CAD environment. No need to switch between applications.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Iterative Workflow</h3>
+                    <p>Refine and modify your designs conversationally. The agent remembers context for an intuitive design process.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="waitlist-section">
         <div class="container">
             <h2 class="section-title">Get Early Access</h2>
