@@ -51,4 +51,10 @@ Thumbs.db
 # Generated models (optional - uncomment if you want to ignore all generated models)
 # generated_models/*.step
 # generated_models/*.iges
-# generated_models/*.obj 
+# generated_models/*.obj
+
+# Node.js
+/node_modules
+/npm-debug.log*
+/yarn-error.log
+/pnpm-debug.log 

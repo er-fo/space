@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp, Trello, Minus, X } from 'react-feather';
 import ChatWindow from './components/ChatWindow';
 import StatusBar from './components/StatusBar';
 import ErrorBoundary from './components/ErrorBoundary';
 import { useDrag } from './hooks/useDrag';
 import { useWindowControls } from './hooks/useWindowControls';
 import './styles/floating-chat.css';
+import './styles/layout.css';
 
 // TypeScript interfaces for app state
 interface AppState {
@@ -14,7 +16,7 @@ interface AppState {
     fusion360: boolean;
     autocad: boolean;
     solidworks: boolean;
-    detected?: boolean;
+    detected: boolean;
     message?: string;
   };
   workspaceInfo: {
@@ -33,7 +35,8 @@ const App: React.FC = () => {
     cadSoftwareDetected: {
       fusion360: false,
       autocad: false,
-      solidworks: false
+      solidworks: false,
+      detected: false
     },
     workspaceInfo: {
       path: null,
@@ -81,14 +84,12 @@ const App: React.FC = () => {
           const cadDetection = await window.electronAPI.detectCADSoftware();
           setAppState(prev => ({
             ...prev,
-            cadSoftwareDetected: {
-              ...(cadDetection || {
+            cadSoftwareDetected: cadDetection || {
                 fusion360: false,
                 autocad: false,
                 solidworks: false,
+                detected: false,
                 message: 'CAD detection failed'
-              }),
-              detected: cadDetection?.detected || false
             }
           }));
 
@@ -165,7 +166,7 @@ const App: React.FC = () => {
               title={isWindowCollapsed ? "Expand" : "Collapse"}
               disabled={isLoading}
             >
-              {isWindowCollapsed ? '▲' : '▼'}
+              {isWindowCollapsed ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
             <button 
               className={`control-btn pin ${windowState.isAlwaysOnTop ? 'active' : ''}`}
@@ -173,7 +174,7 @@ const App: React.FC = () => {
               title={`${windowState.isAlwaysOnTop ? 'Unpin' : 'Pin'} window`}
               disabled={isLoading}
             >
-              📌
+              <Trello size={14} />
             </button>
             <button 
               className="control-btn minimize"
@@ -181,7 +182,7 @@ const App: React.FC = () => {
               title="Minimize"
               disabled={isLoading}
             >
-              −
+              <Minus size={16} />
             </button>
             <button 
               className="control-btn close"
@@ -189,50 +190,51 @@ const App: React.FC = () => {
               title="Close"
               disabled={isLoading}
             >
-              ×
+              <X size={16} />
             </button>
           </div>
         </header>
 
         {!isWindowCollapsed && (
-          <div className="app-body">
-            <main className="app-main">
-              {!appState.isAuthenticated ? (
-                <div className="auth-placeholder">
-                  <p>Authentication will be implemented in Phase 1.4</p>
-                  <button onClick={() => handleAuthentication({ id: 'demo', name: 'Demo User' })}>
-                    Continue as Demo User
-                  </button>
+          <>
+            <div className="app-body">
+              <main className="app-main">
+                {!appState.isAuthenticated ? (
+                  <div className="auth-placeholder">
+                    <p>Authentication will be implemented in Phase 1.4</p>
+                    <button className="btn btn-primary" onClick={() => handleAuthentication({ id: 'demo', name: 'Demo User' })}>
+                      Continue as Demo User
+                    </button>
+                  </div>
+                ) : (
+                  <ChatWindow 
+                    user={appState.currentUser}
+                    cadSoftware={appState.cadSoftwareDetected}
+                    workspace={appState.workspaceInfo}
+                  />
+                )}
+              </main>
+              <aside className="app-right-panel">
+                <div className="panel-content">
+                  <h3>Inspector</h3>
+                  <p>Modular snap-in sections will be placed here.</p>
                 </div>
-              ) : (
-                <ChatWindow 
-                  user={appState.currentUser}
-                  cadSoftware={appState.cadSoftwareDetected}
-                  workspace={appState.workspaceInfo}
-                />
-              )}
-            </main>
-            <aside className="app-right-panel">
-              <div className="panel-content">
-                <h3>Inspector</h3>
-                <p>Modular snap-in sections will be placed here.</p>
-              </div>
-            </aside>
-          </div>
+              </aside>
+            </div>
+            <footer className="app-footer">
+              <StatusBar 
+                cadDetected={appState.cadSoftwareDetected}
+                workspacePath={appState.workspaceInfo.path}
+                version={appVersion}
+                platform={systemInfo?.platform}
+                isAuthenticated={appState.isAuthenticated}
+                user={appState.currentUser}
+                errors={[]}
+                onSignOut={handleSignOut}
+              />
+            </footer>
+          </>
         )}
-
-        <footer className="app-footer">
-          <StatusBar 
-            cadDetected={appState.cadSoftwareDetected}
-            workspacePath={appState.workspaceInfo.path}
-            version={appVersion}
-            platform={systemInfo?.platform}
-            isAuthenticated={appState.isAuthenticated}
-            user={appState.currentUser}
-            errors={[]}
-            onSignOut={handleSignOut}
-          />
-        </footer>
 
         {/* Floating controls when collapsed */}
         {isWindowCollapsed && (

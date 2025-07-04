@@ -1,0 +1,41 @@
+/* New layout styles based on design guidelines */
+
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden; /* To contain the two scrolling panels */
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Allow scrolling within the main content */
+}
+
+.app-right-panel {
+  width: 280px;
+  background-color: var(--secondary-surfaces);
+  border-left: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  transition: width var(--motion-duration-normal) var(--motion-ease-out);
+}
+
+.app-right-panel[data-visible="false"] {
+    width: 0;
+    display: none;
+}
+
+.panel-content {
+  padding: 16px;
+  flex: 1;
+}
+
+.panel-content h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 8px;
+} 

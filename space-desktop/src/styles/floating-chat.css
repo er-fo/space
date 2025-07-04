@@ -94,30 +94,29 @@
 
 .control-btn {
   background: transparent;
-  border: 1px solid #3E3E42;
-  color: #D4D4D4;
-  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  color: var(--primary-text);
+  padding: 6px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 12px;
   transition: all 0.2s ease;
-  min-width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .control-btn:hover {
-  background: #252526;
-  border-color: #007ACC;
-  color: #007ACC;
+  background: var(--secondary-surfaces);
+  border-color: var(--primary-accent);
+  color: var(--primary-accent);
 }
 
 .control-btn.active {
-  background: #007ACC;
+  background: var(--primary-accent);
   color: white;
-  border-color: #007ACC;
+  border-color: var(--primary-accent);
 }
 
 .control-btn.close:hover {
@@ -150,11 +149,40 @@
 }
 
 /* Main content area */
+.app-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
 .app-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+}
+
+.app-right-panel {
+  width: 280px;
+  background-color: var(--secondary-surfaces);
+  border-left: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  transition: width var(--motion-duration-normal) var(--motion-ease-out);
+  backdrop-filter: blur(12px);
+}
+
+.panel-content {
+  padding: 16px;
+  flex: 1;
+}
+
+.panel-content h3 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 8px;
 }
 
 /* Authentication placeholder */
@@ -165,6 +193,7 @@
   height: 100%;
   padding: 20px;
   background: #1E1E1E;
+  max-width: 300px;
 }
 
 .auth-content {
@@ -184,6 +213,8 @@
   font-size: 14px;
 }
 
+/* DEPRECATED - Using global button styles now */
+/*
 .btn {
   background: #007ACC;
   color: white;
@@ -212,6 +243,7 @@
 .btn-secondary {
   background: #6c757d;
 }
+*/
 
 .feature-status {
   margin-top: 20px;

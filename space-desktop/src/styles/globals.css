@@ -52,7 +52,7 @@ body {
 }
 
 /* Button Styles */
-.btn {
+.space-app .btn {
   padding: 8px 16px;
   border: none;
   border-radius: 4px; /* Guideline: 4px */
@@ -63,45 +63,45 @@ body {
   outline: none;
 }
 
-.btn:hover {
+.space-app .btn:hover {
   transform: scale(1.04); /* Guideline: slight Z-scale */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.btn:active {
+.space-app .btn:active {
   transform: scale(1.02);
 }
 
-.btn-primary {
+.space-app .btn-primary {
   background: var(--primary-accent);
   color: white;
 }
 
-.btn-primary:hover {
+.space-app .btn-primary:hover {
   filter: brightness(1.1);
   transform: scale(1.04);
   box-shadow: 0 2px 8px rgba(11, 165, 236, 0.3);
 }
 
-.btn-secondary {
+.space-app .btn-secondary {
   background: transparent;
   color: var(--primary-text);
   border: 1px solid var(--panel-border);
 }
 
-.btn-secondary:hover {
+.space-app .btn-secondary:hover {
   background: var(--secondary-surfaces);
   border-color: var(--primary-accent);
 }
 
-.btn:disabled {
+.space-app .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none !important;
 }
 
 /* Input Styles */
-input, textarea {
+.space-app input, .space-app textarea {
   font-family: inherit;
   font-size: var(--font-size-body);
   padding: 8px 12px;
@@ -113,7 +113,7 @@ input, textarea {
   transition: all var(--motion-duration-normal) ease;
 }
 
-input:focus, textarea:focus {
+.space-app input:focus, .space-app textarea:focus {
   border-color: var(--primary-accent);
   box-shadow: 0 0 0 2px rgba(11, 165, 236, 0.2);
 }
