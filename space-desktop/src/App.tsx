@@ -195,7 +195,7 @@ const App: React.FC = () => {
         </header>
 
         {!isWindowCollapsed && (
-          <>
+          <div className="app-body">
             <main className="app-main">
               {!appState.isAuthenticated ? (
                 <div className="auth-placeholder">
@@ -212,21 +212,27 @@ const App: React.FC = () => {
                 />
               )}
             </main>
-
-            <footer className="app-footer">
-              <StatusBar 
-                cadDetected={appState.cadSoftwareDetected}
-                workspacePath={appState.workspaceInfo.path}
-                version={appVersion}
-                platform={systemInfo?.platform}
-                isAuthenticated={appState.isAuthenticated}
-                user={appState.currentUser}
-                errors={[]}
-                onSignOut={handleSignOut}
-              />
-            </footer>
-          </>
+            <aside className="app-right-panel">
+              <div className="panel-content">
+                <h3>Inspector</h3>
+                <p>Modular snap-in sections will be placed here.</p>
+              </div>
+            </aside>
+          </div>
         )}
+
+        <footer className="app-footer">
+          <StatusBar 
+            cadDetected={appState.cadSoftwareDetected}
+            workspacePath={appState.workspaceInfo.path}
+            version={appVersion}
+            platform={systemInfo?.platform}
+            isAuthenticated={appState.isAuthenticated}
+            user={appState.currentUser}
+            errors={[]}
+            onSignOut={handleSignOut}
+          />
+        </footer>
 
         {/* Floating controls when collapsed */}
         {isWindowCollapsed && (
