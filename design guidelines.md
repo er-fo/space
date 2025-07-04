@@ -1,125 +1,114 @@
-1. Color Palette
+# CADAgentPRO – Design Guidelines
 
-    Base Background: Very dark gray (#1E1E1E)
+## 1. Color Palette
 
-    Secondary Surfaces: Slightly lighter gray (#252526) for gutters, panels, dialogs
+### Base Colors
+- **Base Background:** `#1E1E1E` – Dark neutral base
+- **Secondary Surfaces:** `#252526` – Panels, gutters, dialogs
+- **Panel Depth Overlay:** `linear-gradient(#1E1E1E, #212121)` with optional 6% texture/noise overlay
 
-    Foreground/Text: Soft off‑white (#D4D4D4)
+### Foreground/Text
+- **Primary Text:** `#D4D4D4` – Soft off-white
+- **Secondary Text / Labels:** `#858585` – Muted gray
+- **Ghost Text:** `rgba(212, 212, 212, 0.6)` – Light italic suggestions
 
-    Primary Accent: Vivid blue (#007ACC) for buttons, active states, focused outlines
+### Accent Colors
+- **Primary Accent (default):** `#0BA5EC` – Elevated blue for focused elements
+- **AI Assist Accent (optional dual-mode):** `#73C991` – Green for intelligent agent states
+- **Error/Removal:** `#F14C4C80` – Semi-transparent red
+- **Success/Addition:** `#73C99180` – Semi-transparent green
 
-    Error/Removal: Semi‑transparent red (#F14C4C80)
+## 2. Typography
 
-    Success/Addition: Semi‑transparent green (#73C99180)
+### Font Families
+- **Primary Monospace:** `IBM Plex Mono`, `JetBrains Mono`, fallback: system monospace
+- **Secondary UI Text:** `Inter`, `SF Pro`, fallback: system UI sans-serif
 
-2. Typography
+### Sizing
+- **Body Text:** 14px (0.875rem), line-height: 1.6
+- **Labels / Fine Print:** 12px, muted gray
+- **Toolbar/Controls:** 13px semi-bold
+- **Agent Replies:** 13px italic, blue-tinted or semi-muted
 
-    Font Family: Monospaced (e.g. Fira Code, JetBrains Mono), fallback system monospace
+## 3. Layout & Structure
 
-    Body/Text Size: 14 px (or equivalent 0.875 rem), line‑height ~1.6
+### Top Toolbar
+- Full-width, single-row
+- One-pixel dividers between tool groups
+- 16px stroke-only icons with consistent spacing
+- Optional glow edge on hover
 
-    Fine Print (line numbers, labels): 12 px, muted gray (#858585)
+### Main Region
+- **Center:** Code, model, or content view
+- **Right-Docked Panel:**
+  - Semi-translucent `#252526`
+  - Thin border (`#3E3E42`) or glow edge
+  - Backdrop blur (12px) if supported
+  - Modular snap-in sections, tabs, or inspector views
 
-3. Layout & Structure
+### Bottom Status Bar
+- Full-width
+- Highlight color stripe matching current tool or agent state
+- Optional micro-indicators (dot or label states)
 
-    Top Toolbar: Single‑row, full‑width strip containing primary actions/icons
+## 4. Controls & Iconography
 
-    Main Region:
+### Icons
+- Stroke-only set (1.5px)
+- Size: 16×16px
+- Default color: `#D4D4D4`, hover/focus: `#0BA5EC`
+- Visual metaphors: wireframe cubes, orbit controls, inspection tools
 
-        Center: Code or content view
+### Buttons
+- **Primary:** Rounded corners (4px), solid fill `#0BA5EC`, white text
+- **Secondary:** Transparent background, thin border, hover = darker surface shade
 
-        Right‑Docked Panel: Semi‑translucent background with slight blur, thin border
+### Inputs / Dropdowns
+- Background: `#252526`
+- Border: `#3E3E42`
+- On focus: accent ring `#0BA5EC` with light glow
 
-    Bottom Status Bar: Full‑width, colored (#007ACC) highlights for active items
+## 5. Motion & Interaction Feedback
 
-4. Controls & Iconography
+### Motion Principles
+- No bounce; only smooth, confident transitions
+- Snap-like movement on actions (as if precision-fit)
 
-    Icons: Simple line‑icon set, 16×16 px; default light gray, accent‑blue on hover/focus
+### Timings
+- **Slide-in Panels:** 200ms ease-out
+- **Hover Effects:** 120ms fade + slight Z-scale (1.00 → 1.04)
+- **Ghost Text Fade:** 100ms in/out, light blur
+- **Diff Highlights:** 300ms green/red flash on content change
+- **Error Feedback:** Small jitter animation (1px shift)
 
-    Buttons:
+### Agent Interaction Cues
+- Floating command orb (bottom right) with pulse when active
+- Slide-in context panels triggered by agent response
+- Blueprint-style callout overlays for suggestions
 
-        Primary: Rounded corners (4 px), solid #007ACC with white text
+## 6. Visual Identity & Differentiation
 
-        Secondary: Transparent bg, subtle border, hover shade from secondary surface
+### Visual Style
+- Industrial minimalism with subtle depth
+- High contrast line work, sharp geometry
+- Micro-gradients, occasional inner shadows
+- Layered backgrounds with mild materiality (e.g. grid overlays, carbon texture)
 
-    Inputs/Dropdowns: Dark background (#252526), thin border (#3E3E42), accent focus ring
+### Layout Metaphors
+- CAD inspection panels over dev editor layout
+- Visual cues from SolidWorks, Fusion360: precision, measurement lines, technical UI
+- Avoid generic flat sections — use modular structure, subtle transitions, and grid alignment
 
-5. Motion & Feedback
+## 7. Design Tokens (Example)
 
-    Slide‑In Panels: Horizontal translate from 100 % to 0 over ~200 ms, ease‑out
-
-    Ghost Text (Suggestions): Semi‑opaque light gray, italic, fade in/out ~120 ms
-
-    Diff Highlights: Brief colored flash (green/red) on change for ~300 ms
-
-Implementation Tips:
-
-    Expose these values as theme variables or resource keys in your framework.
-
-    Leverage your UI toolkit’s animation APIs for the panel slides and fade transitions.
-
-    Keep your icon set consistent, stroke‑only, and sized at around 16 dp/px.
-
-    Use a backdrop‑blur or translucency effect in the right‑dock if supported (otherwise simulate with a partially transparent fill).1. Color Palette
-
-    Base Background: Very dark gray (#1E1E1E)
-
-    Secondary Surfaces: Slightly lighter gray (#252526) for gutters, panels, dialogs
-
-    Foreground/Text: Soft off‑white (#D4D4D4)
-
-    Primary Accent: Vivid blue (#007ACC) for buttons, active states, focused outlines
-
-    Error/Removal: Semi‑transparent red (#F14C4C80)
-
-    Success/Addition: Semi‑transparent green (#73C99180)
-
-2. Typography
-
-    Font Family: Monospaced (e.g. Fira Code, JetBrains Mono), fallback system monospace
-
-    Body/Text Size: 14 px (or equivalent 0.875 rem), line‑height ~1.6
-
-    Fine Print (line numbers, labels): 12 px, muted gray (#858585)
-
-3. Layout & Structure
-
-    Top Toolbar: Single‑row, full‑width strip containing primary actions/icons
-
-    Main Region:
-
-        Center: Code or content view
-
-        Right‑Docked Panel: Semi‑translucent background with slight blur, thin border
-
-    Bottom Status Bar: Full‑width, colored (#007ACC) highlights for active items
-
-4. Controls & Iconography
-
-    Icons: Simple line‑icon set, 16×16 px; default light gray, accent‑blue on hover/focus
-
-    Buttons:
-
-        Primary: Rounded corners (4 px), solid #007ACC with white text
-
-        Secondary: Transparent bg, subtle border, hover shade from secondary surface
-
-    Inputs/Dropdowns: Dark background (#252526), thin border (#3E3E42), accent focus ring
-
-5. Motion & Feedback
-
-    Slide‑In Panels: Horizontal translate from 100 % to 0 over ~200 ms, ease‑out
-
-    Ghost Text (Suggestions): Semi‑opaque light gray, italic, fade in/out ~120 ms
-
-    Diff Highlights: Brief colored flash (green/red) on change for ~300 ms
-
-Implementation Tips:
-
-    Expose these values as theme variables or resource keys in your framework.
-
-    Leverage your UI toolkit’s animation APIs for the panel slides and fade transitions.
-
-    Keep your icon set consistent, stroke‑only, and sized at around 16 dp/px.
-
-    Use a backdrop‑blur or translucency effect in the right‑dock if supported (otherwise simulate with a partially transparent fill).
+```json
+{
+  "color.background.base": "#1E1E1E",
+  "color.surface.secondary": "#252526",
+  "color.accent.primary": "#0BA5EC",
+  "color.text.primary": "#D4D4D4",
+  "font.family.mono": "'IBM Plex Mono', monospace",
+  "font.family.ui": "'Inter', sans-serif",
+  "motion.default": "200ms ease-out",
+  "icon.strokeWidth": "1.5"
+}

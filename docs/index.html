@@ -9,16 +9,19 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
             --base-bg: #1E1E1E;
             --secondary-surface: #252526;
-            --foreground: #D4D4D4;
-            --primary-accent: #007ACC;
-            --muted-gray: #858585;
-            --input-border: #3E3E42;
+            --primary-text: #D4D4D4;
+            --secondary-text: #858585;
+            --primary-accent: #0BA5EC;
+            --ai-assist-accent: #73C991;
+            --error-removal: #F14C4C80;
+            --success-addition: #73C991;
+            --panel-border: #3E3E42;
         }
 
         * {
@@ -28,11 +31,11 @@
         }
         
         body {
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-family: 'Inter', 'SF Pro', sans-serif;
             background: var(--base-bg);
-            color: var(--foreground);
+            color: var(--primary-text);
             line-height: 1.6;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         .container {
@@ -43,25 +46,28 @@
         
         .header {
             text-align: center;
-            padding: 4rem 2rem 3rem;
+            padding: 5rem 2rem 4rem;
+        }
+
+        .logo-container {
+            margin-bottom: 1.5rem;
         }
         
         .logo {
-            font-size: 3rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: var(--primary-accent);
+            max-width: 350px;
+            width: 100%;
+            height: auto;
         }
         
         .tagline {
             font-size: 1.25rem;
             margin-bottom: 1rem;
-            color: var(--foreground);
+            color: var(--primary-text);
         }
         
         .problem {
             font-size: 1rem;
-            color: var(--muted-gray);
+            color: var(--secondary-text);
             max-width: 650px;
             margin-left: auto;
             margin-right: auto;
@@ -70,8 +76,8 @@
         .features-section {
             padding: 3rem 0;
             background: var(--secondary-surface);
-            border-top: 1px solid var(--input-border);
-            border-bottom: 1px solid var(--input-border);
+            border-top: 1px solid var(--panel-border);
+            border-bottom: 1px solid var(--panel-border);
         }
 
         .features-grid {
@@ -84,7 +90,7 @@
             background: var(--base-bg);
             padding: 1.5rem;
             border-radius: 4px;
-            border: 1px solid var(--input-border);
+            border: 1px solid var(--panel-border);
         }
 
         .feature-item h3 {
@@ -94,8 +100,8 @@
         }
 
         .feature-item p {
-            font-size: 0.875rem;
-            color: var(--muted-gray);
+            font-size: 0.9rem;
+            color: var(--secondary-text);
         }
         
         .waitlist-section {
@@ -107,13 +113,13 @@
             font-size: 2rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
-            color: var(--foreground);
+            color: var(--primary-text);
         }
 
         .section-subtitle {
-            font-size: 1rem;
-            color: var(--muted-gray);
-            margin-bottom: 2rem;
+            font-size: 1.1rem;
+            color: var(--secondary-text);
+            margin-bottom: 2.5rem;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
@@ -128,44 +134,45 @@
         
         .waitlist-form input {
             flex: 1;
-            padding: 0.9rem 1.2rem;
-            border: 1px solid var(--input-border);
+            padding: 1rem 1.2rem;
+            border: 1px solid var(--panel-border);
             background-color: var(--secondary-surface);
             border-radius: 4px;
             font-size: 1rem;
-            color: var(--foreground);
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            color: var(--primary-text);
+            font-family: 'Inter', sans-serif;
             outline: none;
             transition: all 0.2s ease;
         }
         
         .waitlist-form input:focus {
             border-color: var(--primary-accent);
-            box-shadow: 0 0 0 3px #007acc40;
+            box-shadow: 0 0 0 3px rgba(11, 165, 236, 0.2);
         }
         
         .waitlist-form button {
             background: var(--primary-accent);
             color: white;
-            padding: 0.9rem 1.8rem;
+            padding: 1rem 2rem;
             border: none;
             border-radius: 4px;
             font-size: 1rem;
             font-weight: 600;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-family: 'Inter', sans-serif;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.12s ease;
         }
         
         .waitlist-form button:hover {
-            opacity: 0.9;
+            filter: brightness(1.1);
+            transform: scale(1.04);
         }
         
         .success-message {
             display: none;
-            background: #73c99120;
-            color: #73C991;
-            border: 1px solid #73C99180;
+            background: rgba(115, 201, 145, 0.1);
+            color: var(--success-addition);
+            border: 1px solid rgba(115, 201, 145, 0.5);
             padding: 1rem 2rem;
             border-radius: 4px;
             margin: 1.5rem auto 0;
@@ -176,13 +183,13 @@
         .footer {
             text-align: center;
             padding: 2rem 0;
-            border-top: 1px solid var(--input-border);
+            border-top: 1px solid var(--panel-border);
             font-size: 12px;
-            color: var(--muted-gray);
+            color: var(--secondary-text);
         }
 
         .footer a {
-            color: var(--muted-gray);
+            color: var(--secondary-text);
             text-decoration: none;
             margin: 0 0.75rem;
         }
@@ -200,7 +207,9 @@
 <body>
     <div class="header">
         <div class="container">
-            <h1 class="logo">CADagent PRO</h1>
+            <div class="logo-container">
+                <img src="../logotype.png" alt="CADagent PRO Logo" class="logo">
+            </div>
             <p class="tagline">Stop Clicking. Start Designing.</p>
             <p class="problem">The AI assistant that turns your text into 3D models, right inside your existing CAD software.</p>
         </div>
