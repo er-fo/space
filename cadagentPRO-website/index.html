@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CADagent PRO - AI-Powered CAD Automation</title>
+    <meta name="description" content="The future of CAD is here. Generate and modify complex 3D models using natural language.">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --base-bg: #1E1E1E;
+            --secondary-surface: #252526;
+            --foreground: #D4D4D4;
+            --primary-accent: #007ACC;
+            --muted-gray: #858585;
+            --input-border: #3E3E42;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: var(--base-bg);
+            color: var(--foreground);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 4rem 2rem 3rem;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary-accent);
+        }
+        
+        .tagline {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--foreground);
+        }
+        
+        .problem {
+            font-size: 1rem;
+            color: var(--muted-gray);
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-section {
+            padding: 3rem 0;
+            background: var(--secondary-surface);
+            border-top: 1px solid var(--input-border);
+            border-bottom: 1px solid var(--input-border);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            background: var(--base-bg);
+            padding: 1.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--input-border);
+        }
+
+        .feature-item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-accent);
+        }
+
+        .feature-item p {
+            font-size: 0.875rem;
+            color: var(--muted-gray);
+        }
+        
+        .waitlist-section {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--foreground);
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: var(--muted-gray);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .waitlist-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .waitlist-form input {
+            flex: 1;
+            padding: 0.9rem 1.2rem;
+            border: 1px solid var(--input-border);
+            background-color: var(--secondary-surface);
+            border-radius: 4px;
+            font-size: 1rem;
+            color: var(--foreground);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .waitlist-form input:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px #007acc40;
+        }
+        
+        .waitlist-form button {
+            background: var(--primary-accent);
+            color: white;
+            padding: 0.9rem 1.8rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .waitlist-form button:hover {
+            opacity: 0.9;
+        }
+        
+        .success-message {
+            display: none;
+            background: #73c99120;
+            color: #73C991;
+            border: 1px solid #73C99180;
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            margin: 1.5rem auto 0;
+            font-weight: 500;
+            max-width: 500px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--input-border);
+            font-size: 12px;
+            color: var(--muted-gray);
+        }
+
+        .footer a {
+            color: var(--muted-gray);
+            text-decoration: none;
+            margin: 0 0.75rem;
+        }
+        .footer a:hover {
+            color: var(--primary-accent);
+        }
+        
+        @media (max-width: 768px) {
+            .waitlist-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1 class="logo">CADagent PRO</h1>
+            <p class="tagline">The future of CAD is here. AI-powered design automation.</p>
+            <p class="problem">Stop wrestling with complex menus and commands. Describe what you want to build in plain English and watch CADagent PRO bring your ideas to life in any CAD software.</p>
+        </div>
+    </div>
+
+    <div class="features-section">
+        <div class="container">
+            <h2 class="section-title" style="text-align: center;">Powerful Features, Seamless Workflow</h2>
+            <p class="section-subtitle" style="text-align: center;">Everything you need to accelerate your design process.</p>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h3>Natural Language to 3D</h3>
+                    <p>Convert your ideas into precise 3D models using simple text commands. "Create a 50mm cube with a 10mm hole" is all it takes.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Universal CAD Integration</h3>
+                    <p>Works with your favorite CAD software (Fusion 360, SolidWorks, etc.). Real-time model updates without manual reloading.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Iterative Design</h3>
+                    <p>Refine your models with follow-up commands. The AI remembers your conversation context for seamless modifications.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Import & Edit STEP Files</h3>
+                    <p>Intelligently analyze and convert static STEP files into editable, parametric models using an interactive process.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Checkpoint System</h3>
+                    <p>Never lose your progress. Automatically saves design milestones, allowing you to revert to any previous version instantly.</p>
+                </div>
+                <div class="feature-item">
+                    <h3>Always-on Floating Window</h3>
+                    <p>A non-intrusive chat interface that floats over your CAD software, providing a seamless and integrated experience.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+        
+    <div class="waitlist-section">
+        <div class="container">
+            <h2 class="section-title">Get Early Access</h2>
+            <p class="section-subtitle">Join the waitlist for launch updates and an exclusive early-adopter discount.</p>
+            
+            <form id="waitlist-form" class="waitlist-form">
+                <input type="email" name="email" placeholder="Enter your email" required />
+                <button type="submit">Join Waitlist</button>
+            </form>
+            
+            <div id="success-message" class="success-message">
+                🎉 Thanks for joining! Check your email for confirmation.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>
+                <a href="terms.html">Terms of Service</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="mailto:support@cadagent.pro">Contact Support</a>
+            </p>
+            <p style="margin-top: 0.5rem;">&copy; 2024 CADagent PRO. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- CONFIGURATION ---
+            // IMPORTANT: Replace with your Google Apps Script Web App URL
+            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec"; 
+
+            // --- Waitlist Form Submission ---
+            const waitlistForm = document.getElementById('waitlist-form');
+            if (waitlistForm) {
+                waitlistForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const email = e.target.email.value;
+                    const button = e.target.querySelector('button');
+                    const originalText = button.textContent;
+                    
+                    button.textContent = 'Joining...';
+                    button.disabled = true;
+                    
+                    const url = `${SCRIPT_URL}?action=signup&email=${encodeURIComponent(email)}&timestamp=${Date.now()}`;
+                    
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                        await fetch(url, { method: 'GET', mode: 'no-cors', signal: controller.signal });
+                        
+                    } catch (error) {
+                        console.log('Fetch error/timeout is expected for no-cors with Apps Script. Assuming success.', error);
+                    } finally {
+                        showSuccess();
+                    }
+
+                    function showSuccess() {
+                        const successMessage = document.getElementById('success-message');
+                        successMessage.style.display = 'block';
+                        waitlistForm.style.display = 'none';
+                        document.querySelector('.waitlist-section .section-subtitle').style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

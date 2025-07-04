@@ -1,1 +1,4 @@
- 
+# This is a placeholder icon file for testing.
+# In a real implementation, this would be a proper PNG image.
+# For now, we're testing the floating window functionality.
+PLACEHOLDER_ICON 

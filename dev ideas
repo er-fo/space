@@ -15,3 +15,4 @@
    7.3 Phase 3: Generate 3-4 intelligent MCQs based on detected geometry (e.g., "Are these mounting holes?", "Should angle be parametric?")
    7.4 Phase 4: LLM synthesizes geometry + context + MCQ answers → enhanced parametric Python code
    7.5 This creates a bridge from static external CAD files back into our editable Python ecosystem 
+8. Make the website one github repo(public), and the actual code and such, another repo (private)
