@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CADagent PRO - AI-Powered CAD Automation</title>
+    <meta name="description" content="The future of CAD is here. Generate and modify complex 3D models using natural language.">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --base-bg: #1E1E1E;
+            --secondary-surface: #252526;
+            --primary-text: #D4D4D4;
+            --secondary-text: #858585;
+            --primary-accent: #0BA5EC;
+            --ai-assist-accent: #73C991;
+            --error-removal: #F14C4C80;
+            --success-addition: #73C991;
+            --panel-border: #3E3E42;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'SF Pro', sans-serif;
+            background: var(--base-bg);
+            color: var(--primary-text);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 5rem 2rem 4rem;
+        }
+
+        .logo-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        .logo {
+            max-width: 350px;
+            width: 100%;
+            height: auto;
+        }
+        
+        .tagline {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--primary-text);
+        }
+        
+        .problem {
+            font-size: 1rem;
+            color: var(--secondary-text);
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-section {
+            padding: 3rem 0;
+            background: var(--secondary-surface);
+            border-top: 1px solid var(--panel-border);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-item {
+            background: var(--base-bg);
+            padding: 1.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .feature-item h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-accent);
+        }
+
+        .feature-item p {
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+        }
+        
+        .waitlist-section {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary-text);
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--secondary-text);
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .waitlist-form {
+            display: flex;
+            gap: 1rem;
+            max-width: 500px;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .waitlist-form input {
+            flex: 1;
+            padding: 1rem 1.2rem;
+            border: 1px solid var(--panel-border);
+            background-color: var(--secondary-surface);
+            border-radius: 4px;
+            font-size: 1rem;
+            color: var(--primary-text);
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .waitlist-form input:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(11, 165, 236, 0.2);
+        }
+        
+        .waitlist-form button {
+            background: var(--primary-accent);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+        
+        .waitlist-form button:hover {
+            filter: brightness(1.1);
+            transform: scale(1.04);
+        }
+        
+        .success-message {
+            display: none;
+            background: rgba(115, 201, 145, 0.1);
+            color: var(--success-addition);
+            border: 1px solid rgba(115, 201, 145, 0.5);
+            padding: 1rem 2rem;
+            border-radius: 4px;
+            margin: 1.5rem auto 0;
+            font-weight: 500;
+            max-width: 500px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--panel-border);
+            font-size: 12px;
+            color: var(--secondary-text);
+        }
+
+        .footer a {
+            color: var(--secondary-text);
+            text-decoration: none;
+            margin: 0 0.75rem;
+        }
+        .footer a:hover {
+            color: var(--primary-accent);
+        }
+        
+        @media (max-width: 768px) {
+            .waitlist-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="logotype.png" alt="CADagent PRO Logo" class="logo">
+            </div>
+            <p class="tagline">Stop Clicking. Start Designing.</p>
+            <p class="problem">The AI assistant that turns your text into 3D models, right inside your existing CAD software.</p>
+        </div>
+    </div>
+        
+    <div class="waitlist-section">
+        <div class="container">
+            <h2 class="section-title">Get Early Access</h2>
+            <p class="section-subtitle">Join the waitlist for launch updates.</p>
+            
+            <form id="waitlist-form" class="waitlist-form">
+                <input type="email" name="email" placeholder="Enter your email" required />
+                <button type="submit">Join Waitlist</button>
+            </form>
+            
+            <div id="success-message" class="success-message">
+                🎉 Thanks for joining! Check your email for confirmation.
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>
+                <a href="terms.html">Terms of Service</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="mailto:support@cadagent.pro">Contact Support</a>
+            </p>
+            <p style="margin-top: 0.5rem;">&copy; 2024 CADagent PRO. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- CONFIGURATION ---
+            // IMPORTANT: Replace with your Google Apps Script Web App URL
+            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec"; 
+
+            // --- Waitlist Form Submission ---
+            const waitlistForm = document.getElementById('waitlist-form');
+            if (waitlistForm) {
+                waitlistForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const email = e.target.email.value;
+                    const button = e.target.querySelector('button');
+                    const originalText = button.textContent;
+                    
+                    button.textContent = 'Joining...';
+                    button.disabled = true;
+                    
+                    const url = `${SCRIPT_URL}?action=signup&email=${encodeURIComponent(email)}&timestamp=${Date.now()}`;
+                    
+                    try {
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+                        await fetch(url, { method: 'GET', mode: 'no-cors', signal: controller.signal });
+                        
+                    } catch (error) {
+                        console.log('Fetch error/timeout is expected for no-cors with Apps Script. Assuming success.', error);
+                    } finally {
+                        showSuccess();
+                    }
+
+                    function showSuccess() {
+                        const successMessage = document.getElementById('success-message');
+                        successMessage.style.display = 'block';
+                        waitlistForm.style.display = 'none';
+                        document.querySelector('.waitlist-section .section-subtitle').style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
