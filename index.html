@@ -32,19 +32,18 @@
             --error: #F87171;
         }
         html {
-            height: 100%;
         }
         body {
             font-family: 'Inter', sans-serif;
             background: var(--gradient-core);
             color: var(--primary-text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            display: grid;
+            place-items: center;
             text-align: center;
             margin: 0;
             padding: 1rem;
             box-sizing: border-box;
+            min-height: 100vh;
         }
         main {
             max-width: 550px;
@@ -156,10 +155,16 @@
             color: var(--primary-accent);
         }
         @media (max-width: 600px) {
+            body {
+                place-items: start center;
+                padding-top: 4rem;
+                padding-bottom: 4rem;
+            }
             .title-container { flex-direction: column; gap: 12px; }
             h1 { font-size: 2rem; }
             p { font-size: 13px; }
             .waitlist-form { flex-direction: column; gap: 16px; }
+            .waitlist-form input, .waitlist-form button { width: 100%; box-sizing: border-box; }
             footer { position: static; margin-top: 64px; }
         }
     </style>

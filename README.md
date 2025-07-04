@@ -1,20 +1,37 @@
 # CADagent PRO - Website
 
-This repository contains the source code for the official website of CADagent PRO, located at [cadagentpro.com](https://cadagentpro.com).
+This repository contains the landing page and website for **CADagent PRO**, the AI assistant that turns text into 3D models.
 
-## 🚀 Purpose
+## Website
 
-The website serves as the main landing page for users to learn about CADagent PRO and join the waitlist for early access.
+- **Live Site**: [cadagentpro.com](https://cadagentpro.com)
+- **Landing Page**: Waitlist capture for early access
+- **Documentation**: Terms, Privacy Policy, and project information
 
-## 🛠️ Tech Stack
+## Project Structure
 
-- HTML5
-- CSS3 (with custom properties)
-- JavaScript (for waitlist form submission)
-- [Google Apps Script](https://www.google.com/script/start/) (for the waitlist backend)
+```
+/
+├── index.html          # Main landing page
+├── privacy.html        # Privacy policy
+├── terms.html          # Terms of service
+├── logotype.png        # Brand logo
+├── CNAME              # GitHub Pages domain configuration
+└── docs/              # GitHub Pages documentation
+```
 
-## 📄 Pages
+## Main Project
 
-- **`index.html`**: Main landing page with feature overview and waitlist form.
-- **`terms.html`**: Terms of Service.
-- **`privacy.html`**: Privacy Policy. 
+The actual CADagent PRO application source code is located in the [`space-core/`](./space-core/) directory.
+
+## Development
+
+This is a static website deployed via GitHub Pages. To make changes:
+
+1. Edit the HTML files directly
+2. Test locally by opening `index.html` in a browser
+3. Push to main branch to deploy automatically
+
+## Brand Guidelines
+
+See [`space-core/design_guidelines.md`](./space-core/design_guidelines.md) for complete visual identity and design system documentation. 
