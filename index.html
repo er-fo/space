@@ -82,6 +82,7 @@
         .waitlist-form {
             display: flex;
             gap: 8px;
+            margin-bottom: 48px;
         }
         input[type="email"] {
             flex: 1;
@@ -145,7 +146,6 @@
             color: var(--primary-accent);
             border: 1px solid var(--primary-accent);
             padding: 10px 20px;
-            margin-top: 16px;
             font-weight: 500;
         }
         .show-editors-btn:hover {
@@ -214,6 +214,12 @@
             .waitlist-form input, .waitlist-form button { width: 100%; box-sizing: border-box; }
             footer { position: static; margin-top: 64px; }
         }
+        .supported-editors-container {
+            margin-top: 48px;
+        }
+        .supported-editors-container p {
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 <body>
@@ -224,28 +230,30 @@
         </div>
         <p>The AI assistant that turns text into 3D models, right inside your CAD software.<br/>Join the waitlist for early access.</p>
         
-        <p>Works natively with the CAD editor of your choice.</p>
-        <button id="show-editors" class="show-editors-btn">See Supported Editors</button>
-        <div id="editors-container" style="display: none;">
-            <ul class="editors-list">
-                <li>SketchUp</li>
-                <li>AutoCAD</li>
-                <li>Solid Edge</li>
-                <li>SOLIDWORKS</li>
-                <li>Onshape</li>
-                <li>Fusion 360 <span class="coming-soon">Coming First to Fusion 360</span></li>
-            </ul>
-        </div>
-
         <form id="waitlist-form" class="waitlist-form">
             <input type="email" name="email" placeholder="Enter your email" required />
             <button type="submit">Join Waitlist</button>
         </form>
         <div id="message" class="message"></div>
+
+        <div class="supported-editors-container">
+            <p>Works natively with the CAD editor of your choice.</p>
+            <button id="show-editors" class="show-editors-btn">See Supported Editors</button>
+            <div id="editors-container" style="display: none;">
+                <ul class="editors-list">
+                    <li>SketchUp</li>
+                    <li>AutoCAD</li>
+                    <li>Solid Edge</li>
+                    <li>SOLIDWORKS</li>
+                    <li>Onshape</li>
+                    <li>Fusion 360 <span class="coming-soon">Coming First to Fusion 360</span></li>
+                </ul>
+            </div>
+        </div>
     </main>
 
     <footer>
-        <span>&copy; 2024 CADagent PRO</span>
+        <span>&copy; 2025 CADagent PRO</span>
     </footer>
 
     <script>
