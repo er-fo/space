@@ -287,9 +287,9 @@
                 fetch(requestURL)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.result === 'success') {
+                        if (data.status === 'success' || data.status === 'ok') {
                             form.style.display = 'none';
-                            messageDiv.textContent = "🎉 Thanks for joining! We'll be in touch soon.";
+                            messageDiv.textContent = data.message || "🎉 Thanks for joining! We'll be in touch soon.";
                             messageDiv.classList.add('success-message');
                             messageDiv.style.display = 'block';
                         } else {
