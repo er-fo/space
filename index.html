@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>CADAgent PRO - Edit CAD Models with Natural Language</title>
-    <meta name="description" content="Stop fighting CAD menus. Edit your 3D models with simple chat commands - inside Fusion 360, SolidWorks, AutoCAD, and more.">
-    <meta name="keywords" content="AI CAD assistant, natural language CAD, 3D modeling automation, CAD workflow, engineering design">
+    <title>CADAgent PRO - Free AI Assistant for CAD</title>
+    <meta name="description" content="Edit your CAD models with natural language — inside Fusion 360, SolidWorks, and more. Completely free. No steep learning curves, no menu hunting.">
+    <meta name="keywords" content="AI, CAD, 3D modeling, automation, engineering, design, free, natural language, Fusion 360, SolidWorks">
     <meta name="author" content="CADAgent PRO">
 
     <!-- Favicon -->
@@ -18,23 +18,25 @@
     <meta http-equiv="Expires" content="0">
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --gradient-cyan-blue: linear-gradient(135deg, #0BA5EC 0%, #0069CB 100%);
+            --gradient-purple-violet: linear-gradient(135deg, #8B5CF6 0%, #4B32B7 100%);
+            --gradient-pink-fuchsia: linear-gradient(135deg, #F472B6 0%, #C026D3 100%);
             --gradient-core: linear-gradient(180deg, #1E1E1E 0%, #232538 100%);
 
             --base-bg: #1E1E1E;
             --surface: #252526;
             --primary-text: #E0E0E0;
             --secondary-text: #A1A1AA;
+            --ghost-text: rgba(224, 224, 224, 0.6);
             --primary-accent: #0BA5EC;
             --focus-accent: #8B5CF6;
             --panel-border: #3E3E42;
             --success: #6EE7B7;
             --error: #F87171;
-            --highlight: #FFD700;
         }
 
         * {
@@ -54,598 +56,543 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 2rem;
+            padding: 0 24px;
         }
 
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Header */
+        header {
+            padding: 32px 0;
             text-align: center;
-            padding: 2rem 0;
         }
 
-        .hero-content {
-            max-width: 800px;
-        }
-
-        .logo-title {
+        .logo-container {
             display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
         }
 
         .logo {
-            width: 60px;
-            height: 60px;
+            width: 48px;
+            height: 48px;
+        }
+
+        .brand-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--primary-text);
+        }
+
+        .free-badge {
+            background: var(--gradient-cyan-blue);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-left: 16px;
+            display: inline-block;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 64px 0;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         .hero h1 {
-            font-size: 3.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
             font-weight: 700;
-            margin-bottom: 1.5rem;
-            color: var(--primary-text);
+            letter-spacing: -0.02em;
             line-height: 1.2;
+            margin-bottom: 32px;
+            background: var(--gradient-cyan-blue);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .hero .tagline {
-            font-size: 1.5rem;
-            color: var(--primary-accent);
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        .hero .subtitle {
+        .hero-subtitle {
             font-size: 1.25rem;
             color: var(--secondary-text);
-            margin-bottom: 3rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            margin-bottom: 48px;
+            font-weight: 500;
         }
 
-        .cta-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2rem;
-            margin-bottom: 3rem;
+        .cta-container {
+            margin-bottom: 32px;
         }
 
         .waitlist-form {
             display: flex;
-            gap: 1rem;
-            max-width: 500px;
-            width: 100%;
+            gap: 16px;
+            max-width: 400px;
+            margin: 0 auto 24px;
         }
 
         input[type="email"] {
             flex: 1;
-            padding: 1rem 1.5rem;
-            border: 2px solid var(--panel-border);
+            padding: 16px 20px;
+            border: 1px solid var(--panel-border);
             background-color: var(--surface);
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
             color: var(--primary-text);
             outline: none;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
         }
 
         input[type="email"]:focus {
-            border-color: var(--primary-accent);
-            box-shadow: 0 0 0 4px rgba(11, 165, 236, 0.1);
+            border-color: var(--focus-accent);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
         }
 
-        .btn {
-            padding: 1rem 2rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
+        input[type="email"]::placeholder {
+            color: var(--ghost-text);
         }
 
-        .btn-primary {
+        .cta-button {
             background: var(--gradient-cyan-blue);
             color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.12s ease-in-out;
+            white-space: nowrap;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(11, 165, 236, 0.3);
+        .cta-button:hover {
+            transform: scale(1.04);
+            filter: brightness(1.1);
         }
 
-        .btn-secondary {
-            background: transparent;
-            color: var(--primary-accent);
-            border: 2px solid var(--primary-accent);
-        }
-
-        .btn-secondary:hover {
-            background: var(--primary-accent);
-            color: white;
-        }
-
-        .btn:disabled {
+        .cta-button:disabled {
             background: var(--panel-border);
             color: var(--secondary-text);
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
+            filter: none;
         }
 
-        .message {
-            display: none;
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            font-weight: 500;
+        .trust-signal {
+            color: var(--ghost-text);
+            font-size: 14px;
+            font-style: italic;
         }
 
-        .success-message {
-            background: var(--success);
-            color: #000;
+        /* Features Section */
+        .features {
+            padding: 96px 0;
+            background: rgba(37, 37, 38, 0.3);
+            backdrop-filter: blur(12px);
         }
 
-        .error-message {
-            background: var(--error);
-            color: #000;
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 48px;
+            margin-top: 64px;
         }
 
-        .section {
-            padding: 6rem 0;
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.2s ease;
         }
 
-        .section h2 {
-            font-size: 2.5rem;
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--focus-accent);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 24px;
+            background: var(--gradient-purple-violet);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .feature-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--primary-text);
+        }
+
+        .feature-description {
+            color: var(--secondary-text);
+            line-height: 1.6;
+        }
+
+        .section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
             font-weight: 700;
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 24px;
             color: var(--primary-text);
         }
 
-        .section h3 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: var(--primary-text);
-        }
-
-        .section p {
-            font-size: 1.1rem;
-            color: var(--secondary-text);
-            margin-bottom: 1.5rem;
-        }
-
-        .problem-solution {
-            background: rgba(37, 37, 38, 0.5);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
-        }
-
-        .problem {
-            color: var(--error);
-        }
-
-        .solution {
-            color: var(--success);
-        }
-
-        .how-it-works {
+        .section-subtitle {
             text-align: center;
+            color: var(--secondary-text);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 96px 0;
         }
 
         .steps {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 3rem;
-            margin-top: 3rem;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+            margin-top: 64px;
         }
 
         .step {
-            background: var(--surface);
-            padding: 2rem;
-            border-radius: 12px;
-            border: 1px solid var(--panel-border);
+            text-align: center;
+            position: relative;
         }
 
         .step-number {
-            width: 60px;
-            height: 60px;
+            width: 48px;
+            height: 48px;
             background: var(--gradient-cyan-blue);
-            color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            margin: 0 auto 24px;
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
-            margin: 0 auto 1rem;
+            font-size: 1.2rem;
+            color: white;
         }
 
-        .superpowers {
-            background: rgba(37, 37, 38, 0.5);
+        .step-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--primary-text);
         }
 
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
+        .step-description {
+            color: var(--secondary-text);
+            line-height: 1.6;
         }
 
-        .feature {
-            background: var(--surface);
-            padding: 2rem;
-            border-radius: 12px;
-            border: 1px solid var(--panel-border);
-        }
-
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-
-        .trust-building {
-            text-align: center;
-        }
-
-        .trust-signals {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .trust-signal {
-            background: var(--surface);
-            padding: 2rem;
-            border-radius: 12px;
-            border: 1px solid var(--panel-border);
-        }
-
+        /* Supported Editors */
         .supported-editors {
-            background: rgba(37, 37, 38, 0.5);
-            text-align: center;
+            padding: 96px 0;
+            background: rgba(37, 37, 38, 0.3);
+            backdrop-filter: blur(12px);
         }
 
         .editors-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-top: 3rem;
+            gap: 24px;
+            margin-top: 48px;
         }
 
         .editor-card {
             background: var(--surface);
-            padding: 1.5rem;
-            border-radius: 8px;
             border: 1px solid var(--panel-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            border-radius: 8px;
+            padding: 24px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+            position: relative;
         }
 
         .coming-soon {
-            font-size: 0.7rem;
-            font-weight: 700;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            font-size: 10px;
+            font-weight: bold;
             color: var(--primary-text);
-            background: var(--focus-accent);
-            padding: 0.2rem 0.5rem;
+            background: var(--gradient-purple-violet);
+            padding: 4px 8px;
             border-radius: 4px;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .final-cta {
+        /* Message Styles */
+        .message {
+            display: none;
+            margin-top: 24px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 16px;
             text-align: center;
-            padding: 4rem 0;
         }
 
-        .final-cta h2 {
-            font-size: 2rem;
-            margin-bottom: 1rem;
+        .success-message {
+            color: #121212;
+            background: var(--success);
+            border: 1px solid var(--success);
         }
 
-        .final-cta p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
+        .error-message {
+            color: #121212;
+            background: var(--error);
+            border: 1px solid var(--error);
         }
 
-        .highlight {
-            color: var(--highlight);
-            font-weight: 700;
-        }
-
+        /* Footer */
         footer {
+            padding: 48px 0;
             text-align: center;
-            padding: 2rem 0;
             border-top: 1px solid var(--panel-border);
-            color: var(--secondary-text);
-            font-size: 0.9rem;
+            margin-top: 64px;
         }
 
+        .footer-content {
+            font-size: 14px;
+            color: var(--secondary-text);
+        }
+
+        .footer-links {
+            margin-top: 16px;
+        }
+
+        .footer-links a {
+            color: var(--secondary-text);
+            text-decoration: none;
+            margin: 0 16px;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-accent);
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
             .container {
-                padding: 0 1rem;
+                padding: 0 16px;
             }
-            
-            .hero h1 {
-                font-size: 2.5rem;
+
+            .hero {
+                padding: 48px 0;
             }
-            
-            .hero .tagline {
-                font-size: 1.2rem;
-            }
-            
-            .hero .subtitle {
-                font-size: 1.1rem;
-            }
-            
+
             .waitlist-form {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 16px;
             }
-            
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 2rem;
+
+            .waitlist-form input,
+            .waitlist-form button {
+                width: 100%;
             }
-            
-            .section h2 {
-                font-size: 2rem;
+
+            .features,
+            .how-it-works,
+            .supported-editors {
+                padding: 64px 0;
             }
-            
-            .section {
-                padding: 4rem 0;
+
+            .features-grid,
+            .steps {
+                gap: 32px;
+            }
+
+            .free-badge {
+                margin-left: 0;
+                margin-top: 8px;
+                display: block;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="hero">
+    <header>
         <div class="container">
-            <div class="hero-content">
-                <div class="logo-title">
-                    <img src="logotype.png" alt="CADAgent PRO Logo" class="logo">
-                    <h1>CADAgent PRO</h1>
+            <div class="logo-container">
+                <img src="logotype.png" alt="CADAgent PRO Logo" class="logo">
+                <div>
+                    <span class="brand-name">CADAgent PRO</span>
+                    <span class="free-badge">Completely Free</span>
                 </div>
-                <div class="tagline">Edit CAD models with natural language</div>
-                <p class="subtitle">Stop fighting menus and commands. Just chat with your CAD software like you're talking to a colleague. <strong>Completely free.</strong></p>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Edit your CAD models with natural language</h1>
+                <p class="hero-subtitle">No more menu hunting. No steep learning curves. Just chat with your CAD software like you're talking to a colleague.</p>
                 
-                <div class="cta-section">
+                <div class="cta-container">
                     <form id="waitlist-form" class="waitlist-form">
-                        <input type="email" name="email" placeholder="Enter your email for early access" required />
-                        <button type="submit" class="btn btn-primary">Join Waitlist</button>
+                        <input type="email" name="email" placeholder="Enter your email" required />
+                        <button type="submit" class="cta-button">Get Early Access</button>
                     </form>
+                    <p class="trust-signal">Join 1,000+ designers who are tired of complex CAD workflows</p>
                     <div id="message" class="message"></div>
-                    <p style="color: var(--secondary-text); font-size: 0.9rem;">🚀 <span class="highlight">Completely Free</span> • Works with your existing CAD software</p>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Problem/Solution Section -->
-    <section class="section problem-solution">
-        <div class="container">
-            <div class="grid">
-                <div class="problem">
-                    <h3>😤 The CAD Struggle is Real</h3>
-                    <p>Spending hours navigating menus just to make simple changes?</p>
-                    <p>Redrawing models from scratch when you need iterations?</p>
-                    <p>Feeling like you need a PhD to use your design software?</p>
-                    <p><strong>You're not alone.</strong></p>
-                </div>
-                <div class="solution">
-                    <h3>✨ What If You Could Just Ask?</h3>
-                    <p>"Make this hole 15mm instead of 10mm"</p>
-                    <p>"Add a fillet to all the edges"</p>
-                    <p>"Create a 50mm cube with rounded corners"</p>
-                    <p><strong>Now you can.</strong></p>
+        <section class="features">
+            <div class="container">
+                <h2 class="section-title">Turn Complex CAD Operations Into Simple Conversations</h2>
+                <p class="section-subtitle">Stop fighting with menus and dimensions. Start designing with words.</p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3 class="feature-title">Chat Your Way to Better Designs</h3>
+                        <p class="feature-description">Say "Create a 50mm cube with a 10mm hole" and watch it appear instantly. No sketching, no dimensioning, no hunting through menus.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3 class="feature-title">Works Inside Your Existing Tools</h3>
+                        <p class="feature-description">Fusion 360, SolidWorks, AutoCAD — CADAgent PRO plugs right into what you're already using. No file migrations, no workflow disruptions.</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3 class="feature-title">Iterate in Seconds, Not Minutes</h3>
+                        <p class="feature-description">Change your mind? Just say "Make the hole 15mm instead" and it updates instantly. No redrawing, no starting over.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- How It Works Section -->
-    <section class="section how-it-works">
-        <div class="container">
-            <h2>How It Works</h2>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <h3>Open Your CAD Software</h3>
-                    <p>Keep using Fusion 360, SolidWorks, AutoCAD, or whatever you're comfortable with.</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <h3>Launch CADAgent PRO</h3>
-                    <p>Our floating chat window appears next to your CAD software. Always on top, never in the way.</p>
-                </div>
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <h3>Chat Your Changes</h3>
-                    <p>Type what you want in plain English. Our AI generates the commands and updates your model in real-time.</p>
+        <section class="how-it-works">
+            <div class="container">
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-subtitle">Three simple steps to transform your CAD workflow</p>
+                
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3 class="step-title">Install & Connect</h3>
+                        <p class="step-description">Download CADAgent PRO and connect it to your CAD software. Takes less than 2 minutes.</p>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3 class="step-title">Chat Naturally</h3>
+                        <p class="step-description">Describe what you want to create or modify using plain English. The AI understands your intent.</p>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3 class="step-title">Watch It Happen</h3>
+                        <p class="step-description">Your model updates in real-time. Keep refining through conversation until it's perfect.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Features as Superpowers Section -->
-    <section class="section superpowers">
-        <div class="container">
-            <h2>Your New CAD Superpowers</h2>
-            <div class="features">
-                <div class="feature">
-                    <div class="feature-icon">🗣️</div>
-                    <h3>Think It, Say It, Done</h3>
-                    <p>No more hunting through menus. Just describe what you want and watch it happen instantly.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Lightning-Fast Iterations</h3>
-                    <p>Make changes in seconds, not hours. Perfect for rapid prototyping and client feedback sessions.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🧠</div>
-                    <h3>Remembers Your Conversation</h3>
-                    <p>Each command builds on the last. "Make it bigger" knows what "it" is from your previous message.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🔄</div>
-                    <h3>Breathe Life Into Old Models</h3>
-                    <p>Import static files and make them fully editable. Our AI reverse-engineers and parametrizes your geometry.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🎯</div>
-                    <h3>Works Where You Work</h3>
-                    <p>No file migration. No learning new software. CADAgent PRO overlays on your existing workflow.</p>
-                </div>
-                <div class="feature">
-                    <div class="feature-icon">🚀</div>
-                    <h3>Democratizes Design</h3>
-                    <p>Anyone can prototype now. Students, stakeholders, and non-experts can contribute to the design process.</p>
+        <section class="supported-editors">
+            <div class="container">
+                <h2 class="section-title">Works With Your Favorite CAD Software</h2>
+                <p class="section-subtitle">Native integration with the tools you already know and love</p>
+                
+                <div class="editors-grid">
+                    <div class="editor-card">SolidWorks</div>
+                    <div class="editor-card">AutoCAD</div>
+                    <div class="editor-card">SketchUp</div>
+                    <div class="editor-card">Solid Edge</div>
+                    <div class="editor-card">Onshape</div>
+                    <div class="editor-card">
+                        Fusion 360
+                        <span class="coming-soon">Coming Soon</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Trust Building Section -->
-    <section class="section trust-building">
-        <div class="container">
-            <h2>Why CADAgent PRO?</h2>
-            <div class="trust-signals">
-                <div class="trust-signal">
-                    <h3>🎯 Built by CAD Users</h3>
-                    <p>We've felt your pain. Spent countless hours wrestling with CAD interfaces. This is our solution.</p>
-                </div>
-                <div class="trust-signal">
-                    <h3>🔒 Your Files Stay Yours</h3>
-                    <p>Everything runs locally. Your models never leave your computer. We don't see or store your designs.</p>
-                </div>
-                <div class="trust-signal">
-                    <h3>📈 Constant Evolution</h3>
-                    <p>Regular updates, new features, and expanding CAD software support. We're building this together.</p>
-                </div>
-                <div class="trust-signal">
-                    <h3>💎 Always Free</h3>
-                    <p>No hidden costs, no subscription fees, no premium tiers. CADAgent PRO is completely free to use, forever.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Supported Editors Section -->
-    <section class="section supported-editors">
-        <div class="container">
-            <h2>Works With Your Favorite CAD Software</h2>
-            <div class="editors-grid">
-                <div class="editor-card">
-                    <span>SketchUp</span>
-                </div>
-                <div class="editor-card">
-                    <span>AutoCAD</span>
-                </div>
-                <div class="editor-card">
-                    <span>Solid Edge</span>
-                </div>
-                <div class="editor-card">
-                    <span>SOLIDWORKS</span>
-                </div>
-                <div class="editor-card">
-                    <span>Onshape</span>
-                </div>
-                <div class="editor-card">
-                    <span>Fusion 360</span>
-                    <span class="coming-soon">Coming Soon</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Final CTA Section -->
-    <section class="final-cta">
-        <div class="container">
-            <h2>Ready to Transform Your CAD Workflow?</h2>
-            <p>Join thousands of designers who are already on the waitlist. <strong>It's completely free.</strong></p>
-            <form id="waitlist-form-2" class="waitlist-form" style="margin: 0 auto;">
-                <input type="email" name="email" placeholder="Enter your email for early access" required />
-                <button type="submit" class="btn btn-primary">Get Early Access</button>
-            </form>
-            <div id="message-2" class="message"></div>
-        </div>
-    </section>
+        </section>
+    </main>
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 CADAgent PRO. Making CAD accessible to everyone.</p>
+            <div class="footer-content">
+                <p>&copy; 2025 CADAgent PRO - Completely Free Forever</p>
+                <div class="footer-links">
+                    <a href="privacy.html">Privacy</a>
+                    <a href="terms.html">Terms</a>
+                </div>
+            </div>
         </div>
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec";
-            
-            // Handle both forms
-            const forms = document.querySelectorAll('form[id^="waitlist-form"]');
-            
-            forms.forEach((form, index) => {
-                const messageDiv = document.getElementById(`message${index === 0 ? '' : '-2'}`);
+            const form = document.getElementById('waitlist-form');
+            const messageDiv = document.getElementById('message');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(form);
+                const email = formData.get('email');
+                const button = form.querySelector('button');
                 
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const formData = new FormData(form);
-                    const email = formData.get('email');
-                    const button = form.querySelector('button');
-                    
-                    button.disabled = true;
-                    button.textContent = 'Joining...';
-                    messageDiv.style.display = 'none';
-                    messageDiv.className = 'message';
+                button.disabled = true;
+                button.textContent = 'Joining...';
+                messageDiv.style.display = 'none';
+                messageDiv.className = 'message';
 
-                    const requestURL = `${SCRIPT_URL}?action=signup&email=${encodeURIComponent(email)}`;
+                const requestURL = `${SCRIPT_URL}?action=signup&email=${encodeURIComponent(email)}`;
 
-                    fetch(requestURL)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.status === 'success' || data.status === 'ok') {
-                                form.style.display = 'none';
-                                messageDiv.textContent = data.message || "🎉 Welcome to the future of CAD! We'll be in touch soon.";
-                                messageDiv.classList.add('success-message');
-                                messageDiv.style.display = 'block';
-                                
-                                // Hide the other form too
-                                forms.forEach(f => {
-                                    if (f !== form) {
-                                        f.style.display = 'none';
-                                    }
-                                });
-                            } else {
-                               throw new Error(data.error || 'An unknown error occurred.');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error!', error.message);
-                            messageDiv.textContent = 'Something went wrong. Please check your email and try again.';
-                            messageDiv.classList.add('error-message');
+                fetch(requestURL)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success' || data.status === 'ok') {
+                            form.style.display = 'none';
+                            messageDiv.textContent = data.message || "Thanks for joining! We'll be in touch soon with your free early access.";
+                            messageDiv.classList.add('success-message');
                             messageDiv.style.display = 'block';
+                        } else {
+                           throw new Error(data.error || 'An unknown error occurred.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error!', error.message);
+                        messageDiv.textContent = 'Something went wrong. Please check your email and try again.';
+                        messageDiv.classList.add('error-message');
+                        messageDiv.style.display = 'block';
 
-                            button.disabled = false;
-                            button.textContent = index === 0 ? 'Join Waitlist' : 'Get Early Access';
-                        });
-                });
+                        button.disabled = false;
+                        button.textContent = 'Get Early Access';
+                    });
             });
         });
     </script>
