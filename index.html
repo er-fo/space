@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- SEO Meta Tags -->
-    <title>CADagent PRO - AI Waitlist</title>
-    <meta name="description" content="Join the waitlist for CADagent PRO. The AI assistant that turns your text into 3D models, right inside your existing CAD software.">
-    <meta name="keywords" content="AI, CAD, 3D modeling, automation, engineering, design, BIM, generative design">
-    <meta name="author" content="CADagent PRO">
+    <title>CADAgent PRO - Edit CAD Models with Natural Language</title>
+    <meta name="description" content="Stop fighting CAD menus. Edit your 3D models with simple chat commands - inside Fusion 360, SolidWorks, AutoCAD, and more.">
+    <meta name="keywords" content="AI CAD assistant, natural language CAD, 3D modeling automation, CAD workflow, engineering design">
+    <meta name="author" content="CADAgent PRO">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="logotype.png">
@@ -18,7 +18,7 @@
     <meta http-equiv="Expires" content="0">
 
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -34,277 +34,618 @@
             --panel-border: #3E3E42;
             --success: #6EE7B7;
             --error: #F87171;
+            --highlight: #FFD700;
         }
-        html {
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
+
         body {
             font-family: 'Inter', sans-serif;
             background: var(--gradient-core);
             color: var(--primary-text);
-            display: grid;
-            place-items: center;
-            text-align: center;
-            margin: 0;
-            padding: 1rem;
-            box-sizing: border-box;
-            min-height: 100vh;
-        }
-        main {
-            max-width: 550px;
-            width: 100%;
-        }
-        .title-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-        .logo {
-            width: 50px;
-            height: 50px;
-        }
-        h1 {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: -0.05em;
-            margin: 0;
-            color: var(--primary-text);
-        }
-        p {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            color: var(--secondary-text);
-            margin: 0 0 32px;
             line-height: 1.6;
+            overflow-x: hidden;
         }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .hero-content {
+            max-width: 800px;
+        }
+
+        .logo-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--primary-text);
+            line-height: 1.2;
+        }
+
+        .hero .tagline {
+            font-size: 1.5rem;
+            color: var(--primary-accent);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .hero .subtitle {
+            font-size: 1.25rem;
+            color: var(--secondary-text);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
         .waitlist-form {
             display: flex;
-            gap: 8px;
-            margin-bottom: 48px;
+            gap: 1rem;
+            max-width: 500px;
+            width: 100%;
         }
+
         input[type="email"] {
             flex: 1;
-            padding: 12px 16px;
-            border: 1px solid var(--panel-border);
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--panel-border);
             background-color: var(--surface);
-            border-radius: 4px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
+            border-radius: 8px;
+            font-size: 1rem;
             color: var(--primary-text);
             outline: none;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
+
         input[type="email"]:focus {
-            border-color: var(--focus-accent);
-            box-shadow: 0 0 0 2px var(--focus-accent);
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 4px rgba(11, 165, 236, 0.1);
         }
-        button {
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
             background: var(--gradient-cyan-blue);
             color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.12s ease-in-out;
         }
-        button:hover {
-            transform: scale(1.04);
-            filter: brightness(1.1);
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(11, 165, 236, 0.3);
         }
-        button:disabled {
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary-accent);
+            border: 2px solid var(--primary-accent);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary-accent);
+            color: white;
+        }
+
+        .btn:disabled {
             background: var(--panel-border);
             color: var(--secondary-text);
             cursor: not-allowed;
             transform: none;
-            filter: none;
+            box-shadow: none;
         }
+
         .message {
             display: none;
-            margin-top: 24px;
-            padding: 16px;
-            border-radius: 4px;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
             font-weight: 500;
-            font-size: 14px;
         }
+
         .success-message {
-            color: #121212;
             background: var(--success);
-            border: 1px solid var(--success);
+            color: #000;
         }
+
         .error-message {
-            color: #121212;
             background: var(--error);
-            border: 1px solid var(--error);
+            color: #000;
         }
-        .show-editors-btn {
-            background: transparent;
-            color: var(--primary-accent);
-            border: 1px solid var(--primary-accent);
-            padding: 10px 20px;
-            font-weight: 500;
+
+        .section {
+            padding: 6rem 0;
         }
-        .show-editors-btn:hover {
-            background: var(--primary-accent);
-            color: white;
+
+        .section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: var(--primary-text);
         }
-        .editors-list {
-            list-style: none;
-            padding: 0;
-            margin-top: 24px;
+
+        .section h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary-text);
+        }
+
+        .section p {
+            font-size: 1.1rem;
+            color: var(--secondary-text);
+            margin-bottom: 1.5rem;
+        }
+
+        .problem-solution {
+            background: rgba(37, 37, 38, 0.5);
+        }
+
+        .grid {
             display: grid;
-            gap: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            text-align: left;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .editors-list li {
-            background: var(--surface);
-            padding: 12px 16px;
-            border-radius: 4px;
-            border: 1px solid var(--panel-border);
-            display: flex;
-            justify-content: space-between;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
             align-items: center;
         }
-        .editors-list .coming-soon {
-            font-size: 10px;
-            font-weight: bold;
+
+        .problem {
+            color: var(--error);
+        }
+
+        .solution {
+            color: var(--success);
+        }
+
+        .how-it-works {
+            text-align: center;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient-cyan-blue);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+
+        .superpowers {
+            background: rgba(37, 37, 38, 0.5);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .feature {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .trust-building {
+            text-align: center;
+        }
+
+        .trust-signals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .trust-signal {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .supported-editors {
+            background: rgba(37, 37, 38, 0.5);
+            text-align: center;
+        }
+
+        .editors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+
+        .editor-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .coming-soon {
+            font-size: 0.7rem;
+            font-weight: 700;
             color: var(--primary-text);
-            background-color: var(--focus-accent);
-            padding: 2px 6px;
+            background: var(--focus-accent);
+            padding: 0.2rem 0.5rem;
             border-radius: 4px;
             text-transform: uppercase;
         }
+
+        .final-cta {
+            text-align: center;
+            padding: 4rem 0;
+        }
+
+        .final-cta h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .final-cta p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .highlight {
+            color: var(--highlight);
+            font-weight: 700;
+        }
+
         footer {
-            position: absolute;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 12px;
-            font-family: 'Inter', sans-serif;
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid var(--panel-border);
             color: var(--secondary-text);
-            text-transform: uppercase;
+            font-size: 0.9rem;
         }
-        footer a {
-            color: var(--secondary-text);
-            text-decoration: none;
-            margin: 0 8px;
-        }
-        footer a:hover {
-            color: var(--primary-accent);
-        }
-        @media (max-width: 600px) {
-            body {
-                place-items: start center;
-                padding-top: 4rem;
-                padding-bottom: 4rem;
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
             }
-            .title-container { flex-direction: column; gap: 12px; }
-            h1 { font-size: 2rem; }
-            p { font-size: 13px; }
-            .waitlist-form { flex-direction: column; gap: 16px; }
-            .waitlist-form input, .waitlist-form button { width: 100%; box-sizing: border-box; }
-            footer { position: static; margin-top: 64px; }
-        }
-        .supported-editors-container {
-            margin-top: 48px;
-        }
-        .supported-editors-container p {
-            margin-bottom: 16px;
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero .tagline {
+                font-size: 1.2rem;
+            }
+            
+            .hero .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .waitlist-form {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .section h2 {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 4rem 0;
+            }
         }
     </style>
 </head>
 <body>
-    <main id="root">
-        <div class="title-container">
-            <img src="logotype.png" alt="CADagent PRO Logo" class="logo">
-            <h1>CADAgent PRO</h1>
-        </div>
-        <p>The AI assistant that turns text into 3D models, right inside your CAD software.<br/>Join the waitlist for early access.</p>
-        
-        <form id="waitlist-form" class="waitlist-form">
-            <input type="email" name="email" placeholder="Enter your email" required />
-            <button type="submit">Join Waitlist</button>
-        </form>
-        <div id="message" class="message"></div>
-
-        <div class="supported-editors-container">
-            <p>Works natively with the CAD editor of your choice.</p>
-            <button id="show-editors" class="show-editors-btn">See Supported Editors</button>
-            <div id="editors-container" style="display: none;">
-                <ul class="editors-list">
-                    <li>SketchUp</li>
-                    <li>AutoCAD</li>
-                    <li>Solid Edge</li>
-                    <li>SOLIDWORKS</li>
-                    <li>Onshape</li>
-                    <li>Fusion 360 <span class="coming-soon">Coming First to Fusion 360</span></li>
-                </ul>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="logo-title">
+                    <img src="logotype.png" alt="CADAgent PRO Logo" class="logo">
+                    <h1>CADAgent PRO</h1>
+                </div>
+                <div class="tagline">Edit CAD models with natural language</div>
+                <p class="subtitle">Stop fighting menus and commands. Just chat with your CAD software like you're talking to a colleague. <strong>Completely free.</strong></p>
+                
+                <div class="cta-section">
+                    <form id="waitlist-form" class="waitlist-form">
+                        <input type="email" name="email" placeholder="Enter your email for early access" required />
+                        <button type="submit" class="btn btn-primary">Join Waitlist</button>
+                    </form>
+                    <div id="message" class="message"></div>
+                    <p style="color: var(--secondary-text); font-size: 0.9rem;">🚀 <span class="highlight">Completely Free</span> • Works with your existing CAD software</p>
+                </div>
             </div>
         </div>
-    </main>
+    </section>
+
+    <!-- Problem/Solution Section -->
+    <section class="section problem-solution">
+        <div class="container">
+            <div class="grid">
+                <div class="problem">
+                    <h3>😤 The CAD Struggle is Real</h3>
+                    <p>Spending hours navigating menus just to make simple changes?</p>
+                    <p>Redrawing models from scratch when you need iterations?</p>
+                    <p>Feeling like you need a PhD to use your design software?</p>
+                    <p><strong>You're not alone.</strong></p>
+                </div>
+                <div class="solution">
+                    <h3>✨ What If You Could Just Ask?</h3>
+                    <p>"Make this hole 15mm instead of 10mm"</p>
+                    <p>"Add a fillet to all the edges"</p>
+                    <p>"Create a 50mm cube with rounded corners"</p>
+                    <p><strong>Now you can.</strong></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section how-it-works">
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Open Your CAD Software</h3>
+                    <p>Keep using Fusion 360, SolidWorks, AutoCAD, or whatever you're comfortable with.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Launch CADAgent PRO</h3>
+                    <p>Our floating chat window appears next to your CAD software. Always on top, never in the way.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Chat Your Changes</h3>
+                    <p>Type what you want in plain English. Our AI generates the commands and updates your model in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features as Superpowers Section -->
+    <section class="section superpowers">
+        <div class="container">
+            <h2>Your New CAD Superpowers</h2>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">🗣️</div>
+                    <h3>Think It, Say It, Done</h3>
+                    <p>No more hunting through menus. Just describe what you want and watch it happen instantly.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lightning-Fast Iterations</h3>
+                    <p>Make changes in seconds, not hours. Perfect for rapid prototyping and client feedback sessions.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🧠</div>
+                    <h3>Remembers Your Conversation</h3>
+                    <p>Each command builds on the last. "Make it bigger" knows what "it" is from your previous message.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Breathe Life Into Old Models</h3>
+                    <p>Import static files and make them fully editable. Our AI reverse-engineers and parametrizes your geometry.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Works Where You Work</h3>
+                    <p>No file migration. No learning new software. CADAgent PRO overlays on your existing workflow.</p>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Democratizes Design</h3>
+                    <p>Anyone can prototype now. Students, stakeholders, and non-experts can contribute to the design process.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Building Section -->
+    <section class="section trust-building">
+        <div class="container">
+            <h2>Why CADAgent PRO?</h2>
+            <div class="trust-signals">
+                <div class="trust-signal">
+                    <h3>🎯 Built by CAD Users</h3>
+                    <p>We've felt your pain. Spent countless hours wrestling with CAD interfaces. This is our solution.</p>
+                </div>
+                <div class="trust-signal">
+                    <h3>🔒 Your Files Stay Yours</h3>
+                    <p>Everything runs locally. Your models never leave your computer. We don't see or store your designs.</p>
+                </div>
+                <div class="trust-signal">
+                    <h3>📈 Constant Evolution</h3>
+                    <p>Regular updates, new features, and expanding CAD software support. We're building this together.</p>
+                </div>
+                <div class="trust-signal">
+                    <h3>💎 Always Free</h3>
+                    <p>No hidden costs, no subscription fees, no premium tiers. CADAgent PRO is completely free to use, forever.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Supported Editors Section -->
+    <section class="section supported-editors">
+        <div class="container">
+            <h2>Works With Your Favorite CAD Software</h2>
+            <div class="editors-grid">
+                <div class="editor-card">
+                    <span>SketchUp</span>
+                </div>
+                <div class="editor-card">
+                    <span>AutoCAD</span>
+                </div>
+                <div class="editor-card">
+                    <span>Solid Edge</span>
+                </div>
+                <div class="editor-card">
+                    <span>SOLIDWORKS</span>
+                </div>
+                <div class="editor-card">
+                    <span>Onshape</span>
+                </div>
+                <div class="editor-card">
+                    <span>Fusion 360</span>
+                    <span class="coming-soon">Coming Soon</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="final-cta">
+        <div class="container">
+            <h2>Ready to Transform Your CAD Workflow?</h2>
+            <p>Join thousands of designers who are already on the waitlist. <strong>It's completely free.</strong></p>
+            <form id="waitlist-form-2" class="waitlist-form" style="margin: 0 auto;">
+                <input type="email" name="email" placeholder="Enter your email for early access" required />
+                <button type="submit" class="btn btn-primary">Get Early Access</button>
+            </form>
+            <div id="message-2" class="message"></div>
+        </div>
+    </section>
 
     <footer>
-        <span>&copy; 2025 CADagent PRO</span>
+        <div class="container">
+            <p>&copy; 2025 CADAgent PRO. Making CAD accessible to everyone.</p>
+        </div>
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec";
-            const form = document.getElementById('waitlist-form');
-            const messageDiv = document.getElementById('message');
-            const showEditorsBtn = document.getElementById('show-editors');
-            const editorsContainer = document.getElementById('editors-container');
-
-            showEditorsBtn.addEventListener('click', function() {
-                const isVisible = editorsContainer.style.display === 'block';
-                editorsContainer.style.display = isVisible ? 'none' : 'block';
-                showEditorsBtn.textContent = isVisible ? 'See Supported Editors' : 'Hide Supported Editors';
-            });
-
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(form);
-                const email = formData.get('email');
-                const button = form.querySelector('button');
+            
+            // Handle both forms
+            const forms = document.querySelectorAll('form[id^="waitlist-form"]');
+            
+            forms.forEach((form, index) => {
+                const messageDiv = document.getElementById(`message${index === 0 ? '' : '-2'}`);
                 
-                button.disabled = true;
-                button.textContent = 'Joining...';
-                messageDiv.style.display = 'none';
-                messageDiv.className = 'message';
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(form);
+                    const email = formData.get('email');
+                    const button = form.querySelector('button');
+                    
+                    button.disabled = true;
+                    button.textContent = 'Joining...';
+                    messageDiv.style.display = 'none';
+                    messageDiv.className = 'message';
 
-                // Build a GET request URL that matches the Apps Script doGet handler
-                const requestURL = `${SCRIPT_URL}?action=signup&email=${encodeURIComponent(email)}`;
+                    const requestURL = `${SCRIPT_URL}?action=signup&email=${encodeURIComponent(email)}`;
 
-                fetch(requestURL)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success' || data.status === 'ok') {
-                            form.style.display = 'none';
-                            messageDiv.textContent = data.message || "🎉 Thanks for joining! We'll be in touch soon.";
-                            messageDiv.classList.add('success-message');
+                    fetch(requestURL)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success' || data.status === 'ok') {
+                                form.style.display = 'none';
+                                messageDiv.textContent = data.message || "🎉 Welcome to the future of CAD! We'll be in touch soon.";
+                                messageDiv.classList.add('success-message');
+                                messageDiv.style.display = 'block';
+                                
+                                // Hide the other form too
+                                forms.forEach(f => {
+                                    if (f !== form) {
+                                        f.style.display = 'none';
+                                    }
+                                });
+                            } else {
+                               throw new Error(data.error || 'An unknown error occurred.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error!', error.message);
+                            messageDiv.textContent = 'Something went wrong. Please check your email and try again.';
+                            messageDiv.classList.add('error-message');
                             messageDiv.style.display = 'block';
-                        } else {
-                           throw new Error(data.error || 'An unknown error occurred.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error!', error.message);
-                        messageDiv.textContent = 'Something went wrong. Please check your email and try again.';
-                        messageDiv.classList.add('error-message');
-                        messageDiv.style.display = 'block';
 
-                        button.disabled = false;
-                        button.textContent = 'Join Waitlist';
-                    });
+                            button.disabled = false;
+                            button.textContent = index === 0 ? 'Join Waitlist' : 'Get Early Access';
+                        });
+                });
             });
         });
     </script>
