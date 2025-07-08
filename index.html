@@ -478,7 +478,7 @@
 
                     <!-- Added alternative sign-up CTA -->
                     <div class="auth-alternative">
-                        <p class="auth-text">Or, create a free account to get started at launch.</p>
+                        <p class="auth-text"><em>Or</em><br>Create a free account to get started at launch.</p>
                         <a href="oauth.html" class="cta-button">Create Account</a>
                     </div>
                 </div>
@@ -573,6 +573,7 @@
             const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec";
             const form = document.getElementById('waitlist-form');
             const messageDiv = document.getElementById('message');
+            const accountCTA = document.querySelector('.auth-alternative');
 
             // Show success message after OAuth sign-up
             const params = new URLSearchParams(window.location.search);
@@ -581,8 +582,17 @@
                 messageDiv.classList.add('success-message');
                 messageDiv.style.display = 'block';
 
+                // Persist state and hide CTA
+                localStorage.setItem('accountCreated', 'true');
+                if (accountCTA) accountCTA.style.display = 'none';
+
                 // Clean the URL so the message doesn\'t reappear on refresh
                 window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // If account was created previously, hide the CTA block
+            if (localStorage.getItem('accountCreated') === 'true') {
+                if (accountCTA) accountCTA.style.display = 'none';
             }
 
             form.addEventListener('submit', function(e) {
