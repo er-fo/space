@@ -172,6 +172,7 @@
             cursor: pointer;
             transition: all 0.12s ease-in-out;
             white-space: nowrap;
+            text-decoration: none; /* prevent underline on anchor buttons */
         }
 
         .cta-button:hover {
@@ -370,6 +371,17 @@
             border: 1px solid var(--error);
         }
 
+        /* Alternative Auth CTA */
+        .auth-alternative {
+            margin-top: 32px;
+            text-align: center;
+        }
+
+        .auth-alternative .auth-text {
+            color: var(--secondary-text);
+            margin-bottom: 24px;
+        }
+
         /* Footer */
         footer {
             padding: 48px 0;
@@ -463,6 +475,12 @@
                     </form>
                     <p class="trust-signal">Join other designers who are tired of complex CAD workflows</p>
                     <div id="message" class="message"></div>
+
+                    <!-- Added alternative sign-up CTA -->
+                    <div class="auth-alternative">
+                        <p class="auth-text">Or, create a free account to get started at launch.</p>
+                        <a href="oauth.html" class="cta-button">Create Account</a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -555,6 +573,17 @@
             const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec";
             const form = document.getElementById('waitlist-form');
             const messageDiv = document.getElementById('message');
+
+            // Show success message after OAuth sign-up
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('account') === 'created') {
+                messageDiv.textContent = 'Success! Your account is ready.';
+                messageDiv.classList.add('success-message');
+                messageDiv.style.display = 'block';
+
+                // Clean the URL so the message doesn\'t reappear on refresh
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
 
             form.addEventListener('submit', function(e) {
                 e.preventDefault();

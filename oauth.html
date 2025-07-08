@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CADAgent PRO – Create Account</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gradient-cyan-blue: linear-gradient(135deg, #0BA5EC 0%, #0069CB 100%);
+            --gradient-purple-violet: linear-gradient(135deg, #8B5CF6 0%, #4B32B7 100%);
+            --gradient-core: linear-gradient(180deg, #1E1E1E 0%, #232538 100%);
+
+            --base-bg: #1E1E1E;
+            --surface: #252526;
+            --primary-text: #E0E0E0;
+            --secondary-text: #A1A1AA;
+            --ghost-text: rgba(224, 224, 224, 0.6);
+            --focus-accent: #8B5CF6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--gradient-core);
+            color: var(--primary-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .auth-container {
+            text-align: center;
+            background: rgba(37, 37, 38, 0.4);
+            padding: 48px 32px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 100%;
+            backdrop-filter: blur(8px);
+        }
+
+        .cta-button {
+            background: var(--gradient-cyan-blue);
+            color: white;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.12s ease-in-out;
+            display: block;
+            width: 100%;
+            margin: 0 auto 16px;
+            text-decoration: none; /* prevent underline on anchor-style buttons */
+        }
+
+        .cta-button:hover {
+            transform: scale(1.04);
+            filter: brightness(1.1);
+        }
+
+        .provider-btn {
+            background: var(--surface);
+            border: 1px solid var(--ghost-text);
+            color: var(--primary-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .provider-btn:hover {
+            border-color: var(--focus-accent);
+        }
+
+        .auth-container h2 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .auth-container p {
+            color: var(--secondary-text);
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        /* new helper classes */
+        .action-button {
+            margin-bottom: 32px;
+        }
+
+        .provider-logo {
+            width: 20px;
+            height: 20px;
+        }
+
+        .google-btn {
+            background: #ffffff;
+            color: #121212;
+        }
+
+        .google-btn:hover {
+            filter: brightness(0.97);
+        }
+
+        .github-btn {
+            background: #24292e;
+            color: #ffffff;
+        }
+
+        .github-btn:hover {
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Heading text -->
+        <h2>Create Your Account</h2>
+        <p>Get ready for the future of CAD. Your free account will be ready for you at launch.</p>
+
+        <!-- Google & GitHub buttons -->
+        <button id="google-btn" class="cta-button provider-btn google-btn">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" class="provider-logo">
+            Continue with Google
+        </button>
+        <button id="github-btn" class="cta-button provider-btn">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/github.svg" alt="GitHub Logo" class="provider-logo">
+            Continue with GitHub
+        </button>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // TODO: Replace with your actual project values
+        const SUPABASE_URL = 'https://xtjgpksaiqzcbmxeklas.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_vtwFmhayySeKDBVeToxvbg_9nC2b0EA';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true,
+            },
+        });
+
+        const redirectTo = `${location.origin}/auth/callback.html`;
+
+        document.getElementById('google-btn').addEventListener('click', () => {
+            supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: { redirectTo },
+            });
+        });
+
+        document.getElementById('github-btn').addEventListener('click', () => {
+            supabase.auth.signInWithOAuth({
+                provider: 'github',
+                options: { redirectTo },
+            });
+        });
+    </script>
+</body>
+</html> 

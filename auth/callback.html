@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Authenticating…</title>
+    <style>
+        body {
+            background: #1e1e1e;
+            color: #e0e0e0;
+            font-family: sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <p>Signing you in…</p>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // TODO: Replace with your project details
+        const SUPABASE_URL = 'https://xtjgpksaiqzcbmxeklas.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_vtwFmhayySeKDBVeToxvbg_9nC2b0EA';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true,
+            },
+        });
+
+        // Ensure session is stored then bounce back to home (or /app)
+        supabase.auth.getSession().then(() => {
+            window.location.replace('/?account=created');
+        });
+    </script>
+</body>
+</html> 
