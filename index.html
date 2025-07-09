@@ -19,6 +19,10 @@
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Three.js for 3D rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <style>
         :root {
@@ -415,7 +419,328 @@
             color: var(--primary-accent);
         }
 
+        /* Demo Section */
+        .demo {
+            padding: 96px 0;
+            background: rgba(37, 37, 38, 0.3);
+            backdrop-filter: blur(12px);
+        }
+
+        .demo-interface {
+            max-width: 1000px;
+            margin: 48px auto 0;
+            background: var(--surface);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .demo-input-section {
+            padding: 32px;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .model-viewer {
+            height: 500px;
+            position: relative;
+            background: var(--base-bg);
+        }
+
+        .viewer-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .viewer-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-text);
+        }
+
+        .viewer-status {
+            margin-left: auto;
+            font-size: 0.8rem;
+            color: var(--secondary-text);
+        }
+
+        .viewer-canvas {
+            height: 400px;
+            position: relative;
+            background: linear-gradient(135deg, var(--base-bg) 0%, #2a2a2a 100%);
+        }
+
+        .viewer-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--ghost-text);
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .viewer-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 24px;
+            background: var(--surface);
+            border-top: 1px solid var(--panel-border);
+        }
+
+        .control-btn {
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            color: var(--secondary-text);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .control-btn:hover {
+            border-color: var(--focus-accent);
+            color: var(--focus-accent);
+        }
+
+        .control-help {
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--ghost-text);
+            font-style: italic;
+        }
+
+        .ai-indicator {
+            width: 12px;
+            height: 12px;
+            background: var(--gradient-cyan-blue);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .suggestions {
+            margin-bottom: 24px;
+        }
+
+        .suggestions-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--secondary-text);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .suggestion-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .suggestion-btn {
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            color: var(--secondary-text);
+            padding: 8px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .suggestion-btn:hover {
+            border-color: var(--focus-accent);
+            color: var(--focus-accent);
+        }
+
+        .suggestion-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .chat-input {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid var(--panel-border);
+            background: var(--base-bg);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            color: var(--primary-text);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .chat-input input:focus {
+            border-color: var(--focus-accent);
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+        }
+
+        .chat-input input::placeholder {
+            color: var(--ghost-text);
+        }
+
+        .chat-input button {
+            background: var(--gradient-cyan-blue);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.12s ease-in-out;
+            white-space: nowrap;
+        }
+
+        .chat-input button:hover {
+            transform: scale(1.04);
+            filter: brightness(1.1);
+        }
+
+        .chat-input button:disabled {
+            background: var(--panel-border);
+            color: var(--secondary-text);
+            cursor: not-allowed;
+            transform: none;
+            filter: none;
+        }
+
+        .output-panel {
+            background: var(--surface);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            min-height: 500px;
+        }
+
+        .output-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--secondary-text);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--gradient-purple-violet);
+            color: white;
+        }
+
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .code-block {
+            background: var(--base-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--primary-text);
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .json-output {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--primary-text);
+            margin-bottom: 16px;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .comparison-section {
+            background: var(--base-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .comparison-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--secondary-text);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .limit-message {
+            background: rgba(247, 113, 113, 0.1);
+            border: 1px solid rgba(247, 113, 113, 0.3);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .limit-message p {
+            color: var(--error);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
         /* Responsive Design */
+        @media (max-width: 768px) {
+            .demo-interface {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 0 16px;
@@ -491,6 +816,51 @@
             </div>
         </section>
 
+        <section class="demo">
+            <div class="container">
+                <h2 class="section-title">See It In Action</h2>
+                <p class="section-subtitle">Try our AI assistant and watch it generate 3D models from your descriptions</p>
+                
+                <div class="demo-interface">
+                    <div class="demo-input-section">
+                        <div class="suggestions">
+                            <div class="suggestions-title">Quick Examples</div>
+                            <div class="suggestion-buttons">
+                                <button class="suggestion-btn" onclick="useSuggestion('Create a 20mm cube with a 5mm hole through the center')">20mm cube with hole</button>
+                                <button class="suggestion-btn" onclick="useSuggestion('Make a cylindrical gear with 20 teeth')">Cylindrical gear</button>
+                                <button class="suggestion-btn" onclick="useSuggestion('Design a phone stand with 60 degree angle')">Phone stand</button>
+                                <button class="suggestion-btn" onclick="useSuggestion('Create a hexagonal nut M8 thread')">Hexagonal nut</button>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-input">
+                            <input type="text" id="demo-input" placeholder="Describe your 3D model..." />
+                            <button onclick="submitDemo()" id="demo-submit">Generate 3D Model</button>
+                        </div>
+                    </div>
+                    
+                    <div class="model-viewer">
+                        <div class="viewer-header">
+                            <div class="ai-indicator"></div>
+                            <span class="viewer-title">3D Model Viewer</span>
+                            <div class="viewer-status" id="viewer-status">Ready to generate...</div>
+                        </div>
+                        <div class="viewer-canvas" id="viewer-canvas">
+                            <div class="viewer-placeholder">
+                                <div class="placeholder-icon">🎯</div>
+                                <p>Enter a description above to generate your 3D model</p>
+                            </div>
+                        </div>
+                        <div class="viewer-controls">
+                            <button class="control-btn" onclick="resetView()">Reset View</button>
+                            <button class="control-btn" onclick="toggleWireframe()">Wireframe</button>
+                            <span class="control-help">Click and drag to rotate • Scroll to zoom</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <section class="features">
             <div class="container">
                 <h2 class="section-title">Turn Complex CAD Operations Into Simple Conversations</h2>
@@ -545,6 +915,7 @@
             </div>
         </section>
 
+
         <section class="supported-editors" style="display: flex; justify-content: center; align-items: center;">
             <div class="container">
                 <h2 class="section-title">Works With Your Favorite CAD Software</h2>
@@ -578,6 +949,326 @@
     </footer>
 
     <script>
+        // Demo functionality
+        let demoUsed = false;
+        let scene, camera, renderer, controls;
+        let currentModel = null;
+        
+        function initViewer() {
+            const canvas = document.getElementById('viewer-canvas');
+            const rect = canvas.getBoundingClientRect();
+            
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1e1e1e);
+            
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(75, rect.width / rect.height, 0.1, 1000);
+            camera.position.set(30, 30, 30);
+            
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(rect.width, rect.height);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            
+            // Clear placeholder and add canvas
+            canvas.innerHTML = '';
+            canvas.appendChild(renderer.domElement);
+            
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(50, 50, 50);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            // Grid
+            const gridHelper = new THREE.GridHelper(100, 100, 0x444444, 0x444444);
+            scene.add(gridHelper);
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+        
+        function useSuggestion(text) {
+            if (demoUsed) return;
+            
+            document.getElementById('demo-input').value = text;
+            submitDemo();
+        }
+        
+        function submitDemo() {
+            if (demoUsed) return;
+            
+            const input = document.getElementById('demo-input');
+            const prompt = input.value.trim();
+            
+            if (!prompt) return;
+            
+            demoUsed = true;
+            
+            // Update status
+            document.getElementById('viewer-status').textContent = 'Generating model...';
+            
+            // Disable input and suggestions
+            input.disabled = true;
+            document.getElementById('demo-submit').disabled = true;
+            document.querySelectorAll('.suggestion-btn').forEach(btn => {
+                btn.disabled = true;
+            });
+            
+            // Initialize viewer if not already done
+            if (!renderer) {
+                initViewer();
+            }
+            
+            // Generate model
+            generateModel(prompt);
+        }
+        
+        async function generateModel(prompt) {
+            try {
+                // Google Apps Script URL
+                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyF6KKhd2_Q2cLzGROL8yNZLWtg9xQjo_GbOKTwX0L1I06_uC6lz8yvQdapPYFjtOjb/exec";
+                
+                // Update status to show processing steps
+                document.getElementById('viewer-status').textContent = 'Analyzing your request...';
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        action: 'generate',
+                        prompt: prompt 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('viewer-status').textContent = 'Rendering 3D model...';
+                    
+                    // Add a small delay to show the status
+                    setTimeout(() => {
+                        renderModel(data.geometry);
+                        document.getElementById('viewer-status').textContent = 'Model generated successfully';
+                        
+                        // Show limit message after generation
+                        setTimeout(() => {
+                            showLimitMessage();
+                        }, 2000);
+                    }, 500);
+                } else {
+                    // Show user-friendly error message
+                    document.getElementById('viewer-status').textContent = data.error || 'Generation failed';
+                    
+                    // If it's a backend error, show fallback
+                    if (data.error && data.error.includes('backend')) {
+                        setTimeout(() => {
+                            renderDemoModel(prompt);
+                            document.getElementById('viewer-status').textContent = 'Demo model (backend unavailable)';
+                        }, 1500);
+                    } else {
+                        // For other errors, show fallback immediately
+                        renderDemoModel(prompt);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error generating model:', error);
+                document.getElementById('viewer-status').textContent = 'Connection error - showing demo model';
+                
+                // Fallback to demo model
+                renderDemoModel(prompt);
+            }
+        }
+        
+        function renderModel(geometryData) {
+            // Clear previous model
+            if (currentModel) {
+                scene.remove(currentModel);
+            }
+            
+            const group = new THREE.Group();
+            
+            geometryData.objects.forEach(obj => {
+                let geometry, material, mesh;
+                
+                switch (obj.type) {
+                    case 'box':
+                        geometry = new THREE.BoxGeometry(obj.width, obj.height, obj.depth);
+                        material = new THREE.MeshPhongMaterial({ color: 0x0BA5EC });
+                        mesh = new THREE.Mesh(geometry, material);
+                        break;
+                        
+                    case 'cylinder':
+                        geometry = new THREE.CylinderGeometry(obj.radius, obj.radius, obj.height);
+                        material = new THREE.MeshPhongMaterial({ color: 0x8B5CF6 });
+                        mesh = new THREE.Mesh(geometry, material);
+                        break;
+                        
+                    case 'polygon':
+                        geometry = new THREE.CylinderGeometry(obj.radius, obj.radius, obj.height, obj.sides);
+                        material = new THREE.MeshPhongMaterial({ color: 0xF472B6 });
+                        mesh = new THREE.Mesh(geometry, material);
+                        break;
+                        
+                    default:
+                        geometry = new THREE.BoxGeometry(20, 20, 20);
+                        material = new THREE.MeshPhongMaterial({ color: 0x0BA5EC });
+                        mesh = new THREE.Mesh(geometry, material);
+                }
+                
+                if (mesh) {
+                    mesh.position.set(...obj.position);
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+                    group.add(mesh);
+                }
+            });
+            
+            // Handle holes (subtract from main geometry)
+            const holes = geometryData.objects.filter(obj => obj.type === 'hole');
+            if (holes.length > 0 && group.children.length > 0) {
+                holes.forEach(hole => {
+                    const holeGeometry = new THREE.CylinderGeometry(hole.diameter/2, hole.diameter/2, 100);
+                    const holeMaterial = new THREE.MeshPhongMaterial({ color: 0x000000, transparent: true, opacity: 0.3 });
+                    const holeMesh = new THREE.Mesh(holeGeometry, holeMaterial);
+                    holeMesh.position.set(...hole.position);
+                    group.add(holeMesh);
+                });
+            }
+            
+            scene.add(group);
+            currentModel = group;
+            
+            // Center camera on model
+            const box = new THREE.Box3().setFromObject(group);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+            
+            const maxSize = Math.max(size.x, size.y, size.z);
+            camera.position.set(center.x + maxSize, center.y + maxSize, center.z + maxSize);
+            controls.target.copy(center);
+            controls.update();
+        }
+        
+        function renderDemoModel(prompt) {
+            // Fallback demo models
+            const demoGeometry = {
+                type: "mesh",
+                objects: [
+                    {
+                        type: "box",
+                        width: 20,
+                        height: 20,
+                        depth: 20,
+                        position: [0, 0, 0]
+                    }
+                ]
+            };
+            
+            if (prompt.toLowerCase().includes('hole')) {
+                demoGeometry.objects.push({
+                    type: "hole",
+                    diameter: 5,
+                    position: [0, 0, 0]
+                });
+            }
+            
+            renderModel(demoGeometry);
+            document.getElementById('viewer-status').textContent = 'Demo model (API unavailable)';
+        }
+        
+        function resetView() {
+            if (currentModel) {
+                const box = new THREE.Box3().setFromObject(currentModel);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                
+                const maxSize = Math.max(size.x, size.y, size.z);
+                camera.position.set(center.x + maxSize, center.y + maxSize, center.z + maxSize);
+                controls.target.copy(center);
+                controls.update();
+            }
+        }
+        
+        function toggleWireframe() {
+            if (currentModel) {
+                currentModel.children.forEach(child => {
+                    if (child.material) {
+                        child.material.wireframe = !child.material.wireframe;
+                    }
+                });
+            }
+        }
+        
+        function showLimitMessage() {
+            // Create overlay message
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+            
+            const message = document.createElement('div');
+            message.style.cssText = `
+                background: var(--surface);
+                border: 1px solid var(--panel-border);
+                border-radius: 12px;
+                padding: 32px;
+                max-width: 400px;
+                text-align: center;
+                color: var(--primary-text);
+            `;
+            
+            message.innerHTML = `
+                <h3 style="margin-bottom: 16px; color: var(--primary-text);">Demo Complete!</h3>
+                <p style="margin-bottom: 24px; color: var(--secondary-text);">
+                    You've tried the demo! To create unlimited 3D models, join our waitlist for early access.
+                </p>
+                <button onclick="this.parentElement.parentElement.remove(); document.getElementById('waitlist-form').scrollIntoView({behavior: 'smooth'});" 
+                        style="background: var(--gradient-cyan-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                    Join Waitlist
+                </button>
+            `;
+            
+            overlay.appendChild(message);
+            document.body.appendChild(overlay);
+        }
+        
+        // Add Enter key support
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('demo-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !demoUsed) {
+                    submitDemo();
+                }
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec";
             const form = document.getElementById('waitlist-form');
