@@ -11,7 +11,7 @@
     <meta name="author" content="CADAgent PRO">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="logotype.png">
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
 
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -22,8 +22,8 @@
     
     <!-- Three.js for 3D rendering -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/loaders/GLTFLoader.js"></script>
 
     <style>
         :root {
@@ -784,7 +784,7 @@
     <header>
         <div class="container">
             <div class="logo-container">
-                <img src="logotype.png" alt="CADAgent PRO Logo" class="logo">
+                <img src="logo.svg" alt="CADAgent PRO Logo" class="logo">
                 <div>
                     <span class="brand-name">CADAgent PRO</span>
                     <span class="free-badge">Completely Free</span>
@@ -1043,7 +1043,7 @@
         async function generateModel(prompt) {
             try {
                 // Configuration - Using Fly.io backend for complete pipeline
-                const BACKEND_URL = "https://cadagent-pro.fly.dev"; // Your Fly.io app URL
+                const BACKEND_URL = window.location.origin; // Use same domain as frontend
                 
                 // Generate complete pipeline (JSON plan + Python code + GLTF execution)
                 document.getElementById('viewer-status').textContent = 'Analyzing your request...';
@@ -1646,14 +1646,46 @@
                 <p style="margin-bottom: 24px; color: var(--secondary-text);">
                     You've tried the demo! To create unlimited 3D models, join our waitlist for early access.
                 </p>
-                <button onclick="this.parentElement.parentElement.remove(); document.getElementById('waitlist-form').scrollIntoView({behavior: 'smooth'});" 
-                        style="background: var(--gradient-cyan-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
-                    Join Waitlist
-                </button>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button onclick="this.parentElement.parentElement.parentElement.remove(); document.getElementById('waitlist-form').scrollIntoView({behavior: 'smooth'});" 
+                            style="background: var(--gradient-cyan-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Join Waitlist
+                    </button>
+                    <button onclick="resetDemo(); this.parentElement.parentElement.parentElement.remove();" 
+                            style="background: var(--gradient-purple-violet); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Try Another
+                    </button>
+                </div>
             `;
             
             overlay.appendChild(message);
             document.body.appendChild(overlay);
+        }
+        
+        function resetDemo() {
+            demoUsed = false;
+            document.getElementById('demo-input').disabled = false;
+            document.getElementById('demo-submit').disabled = false;
+            document.getElementById('demo-input').value = '';
+            document.getElementById('viewer-status').textContent = 'Ready to generate...';
+            document.querySelectorAll('.suggestion-btn').forEach(btn => {
+                btn.disabled = false;
+            });
+            
+            // Clear the 3D viewer
+            const canvas = document.getElementById('viewer-canvas');
+            canvas.innerHTML = `
+                <div class="viewer-placeholder">
+                    <div class="placeholder-icon">🎯</div>
+                    <p>Enter a description above to generate your 3D model</p>
+                </div>
+            `;
+            
+            // Clear the scene if it exists
+            if (currentModel && scene) {
+                scene.remove(currentModel);
+                currentModel = null;
+            }
         }
         
         // Add Enter key support

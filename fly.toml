@@ -1,4 +1,4 @@
-app = "cadagent-pro"
+app = "cadagent"
 primary_region = "iad"
 
 [build]

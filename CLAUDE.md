@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CADAgent PRO is a landing page website for an AI assistant that helps users edit CAD models with natural language. This is a hybrid application:
+CADAgent PRO is a landing page website for an AI assistant that helps users edit CAD models with natural language. This is a unified Fly.io application:
 - **Frontend**: Static website served via Flask on Fly.io
 - **Backend**: Python API with CAD libraries (cadquery, cadquery-ocp) on Fly.io
 - **Authentication**: Supabase OAuth integration
 - **Waitlist**: Google Apps Script integration (existing)
-- **Demo Generation**: Google Apps Script for AI prompts + Fly.io for CAD execution
+- **Demo Generation**: Complete pipeline on Fly.io (AI prompts + CAD execution)
 - **Deployment**: Single Docker container on Fly.io
 
 ## Development Commands
@@ -62,12 +62,8 @@ CADAgent PRO is a landing page website for an AI assistant that helps users edit
 ### External Integrations
 
 #### Google Apps Script
-- **Waitlist Endpoint**: Your existing Google Apps Script for waitlist signups
-- **Demo Pipeline Endpoint**: `https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec`
-- **Actions**: 
-  - `signup` - Handles email collection for waitlist signups (existing script)
-  - `generate_cad_pipeline` - Generates CAD plans via Anthropic API for demo functionality
-- **Configuration**: Requires Anthropic API key for demo features
+- **Waitlist Endpoint**: Your existing Google Apps Script for waitlist signups only
+- **Configuration**: Handles email collection for waitlist signups (existing script)
 
 #### Supabase Authentication
 - Project URL: `https://xtjgpksaiqzcbmxeklas.supabase.co`
@@ -119,33 +115,34 @@ When editing files:
 
 ## Demo Backend Setup
 
-### Hybrid Architecture
-The demo functionality uses both Google Apps Script and Fly.io:
+### Unified Fly.io Architecture
+The demo functionality runs entirely on Fly.io:
 
-1. **Google Apps Script**: Handles AI prompt generation via Anthropic API
-2. **Fly.io**: Executes the generated Python/CadQuery code to create 3D models
-
-### Google Apps Script Setup
-1. **Setup**: Deploy the Google Apps Script (`google-apps-script-cadagent.js`) 
-2. **Configuration**: Add your Anthropic API key to line 9 of the script
-3. **Deployment**: Deploy as Web App with "Anyone" permissions
-4. **Integration**: The script URL is configured in `index.html`
+1. **Flask Backend**: Serves static files and handles API requests
+2. **CAD Generation**: `/api/generate` endpoint handles complete pipeline
+3. **AI Integration**: Anthropic API calls for generating CAD plans and Python code
+4. **CAD Execution**: CadQuery executes code and returns GLTF models
 
 ### Fly.io Setup
 1. **Deploy**: `flyctl deploy` to deploy the Flask app with CAD libraries
-2. **Endpoint**: `/api/execute` receives Python code and returns GLTF models
+2. **Endpoints**: 
+   - `/api/generate` - Complete demo pipeline (AI + CAD execution)
+   - `/api/execute` - Legacy endpoint for Python code execution
+   - `/health` - Health check endpoint
 3. **Dependencies**: Full CAD library stack (cadquery, cadquery-ocp)
+4. **Configuration**: Requires `ANTHROPIC_API_KEY` environment variable
 
 ### Demo Flow
-1. User enters prompt → Google Apps Script generates Python code
-2. Python code sent to Fly.io → CadQuery executes and generates GLTF
-3. GLTF model displayed in browser
+1. User enters prompt → Fly.io backend generates JSON plan + Python code via Anthropic API
+2. Python/CadQuery code executes on Fly.io → generates GLTF model
+3. GLTF model returned to frontend and displayed in browser
 
 ### Security Features
-- API key stored securely in Google Apps Script (never exposed to frontend)
-- CORS automatically handled by both services
+- API key stored securely in Fly.io environment variables
+- CORS headers configured for web access
 - Input validation and error handling
-- Isolated Python execution environment on Fly.io
+- Isolated Python execution environment
+- Fallback models when AI is unavailable
 
 ## Fly.io Deployment
 

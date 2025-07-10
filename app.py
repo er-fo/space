@@ -277,7 +277,7 @@ RULES:
 - Include complete 4×4 transformation matrices
 - All dimensions in millimeters
 - Generate clean, executable CadQuery code
-- Always end with: result.exportGltf("output.gltf")
+- Always end with: result.export_gltf("output.gltf")
 
 Your response must have TWO sections:
 1. JSON_PLAN: The structured JSON following CAD Memory specification
@@ -487,9 +487,15 @@ def analyze_prompt_for_geometry(prompt: str) -> Dict[str, Any]:
     default_size = float(size_match.group(1)) if size_match else 20
     
     if 'cylinder' in prompt_lower or 'gear' in prompt_lower:
+        # Look for radius specifically
+        radius_match = re.search(r'(\d+)\s*mm\s*radius|radius[^0-9]*(\d+)', prompt_lower)
+        if radius_match:
+            radius = float(radius_match.group(1) or radius_match.group(2))
+        else:
+            radius = default_size/2
         return {
             'type': 'Cylinder',
-            'params': {'radius': default_size/2, 'height': default_size}
+            'params': {'radius': radius, 'height': default_size}
         }
     elif 'sphere' in prompt_lower or 'ball' in prompt_lower:
         return {
@@ -512,7 +518,7 @@ import cadquery as cq
 result = cq.Workplane("XY").cylinder({geometry['params']['height']}, {geometry['params']['radius']})
 
 # Export as GLTF
-result.exportGltf("output.gltf")
+result.export_gltf("output.gltf")
 '''
     elif geometry['type'] == 'Sphere':
         return f'''
@@ -522,7 +528,7 @@ import cadquery as cq
 result = cq.Workplane("XY").sphere({geometry['params']['radius']})
 
 # Export as GLTF
-result.exportGltf("output.gltf")
+result.export_gltf("output.gltf")
 '''
     else:
         return f'''
@@ -532,7 +538,7 @@ import cadquery as cq
 result = cq.Workplane("XY").box({geometry['params']['width']}, {geometry['params']['depth']}, {geometry['params']['height']})
 
 # Export as GLTF
-result.exportGltf("output.gltf")
+result.export_gltf("output.gltf")
 '''
 
 def check_modules():
