@@ -1021,7 +1021,11 @@
         }
         
         function submitDemo() {
-            if (demoUsed) return;
+            console.log('submitDemo called, demoUsed:', demoUsed);
+            if (demoUsed) {
+                console.log('Demo already used, returning');
+                return;
+            }
             
             const input = document.getElementById('demo-input');
             const prompt = input.value.trim();
@@ -1050,6 +1054,7 @@
         }
         
         async function generateModel(prompt) {
+            console.log('generateModel called with prompt:', prompt);
             let statusInterval;
             
             try {
@@ -1128,12 +1133,14 @@
                     try {
                         await loadGLTFModel(pipeline.gltf);
                         document.getElementById('viewer-status').textContent = 'Model generated successfully';
+                        console.log('✓ GLTF model loaded successfully');
                     } catch (error) {
                         console.error('Error loading GLTF model:', error);
                         document.getElementById('viewer-status').textContent = 'Error loading model - using fallback';
                         
                         // Fall back to JSON plan if GLTF fails
                         if (pipeline.jsonPlan) {
+                            console.log('Falling back to JSON plan');
                             const geometry = convertJSONPlanToGeometry(pipeline.jsonPlan);
                             renderModel(geometry);
                             document.getElementById('viewer-status').textContent = 'Model generated from JSON plan';
