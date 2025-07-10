@@ -529,9 +529,18 @@
             animation: pulse 2s infinite;
         }
 
+        .ai-indicator.loading {
+            animation: spin 1s linear infinite;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 0.6; }
             50% { opacity: 1; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .suggestions {
@@ -1041,14 +1050,47 @@
         }
         
         async function generateModel(prompt) {
+            let statusInterval;
+            
             try {
                 // Configuration - Using Fly.io backend for complete pipeline
                 const BACKEND_URL = window.location.origin; // Use same domain as frontend
                 
-                // Generate complete pipeline (JSON plan + Python code + GLTF execution)
-                document.getElementById('viewer-status').textContent = 'Analyzing your request...';
+                // Start progressive status updates
+                const statusMessages = [
+                    'Parsing your prompt...',
+                    'Generating CAD plan...',
+                    'Writing Python code...',
+                    'Creating 3D model...',
+                    'Converting to GLTF...',
+                    'Finalizing model...'
+                ];
                 
-                const pipelineResponse = await fetch(BACKEND_URL + '/api/generate', {
+                let messageIndex = 0;
+                document.getElementById('viewer-status').textContent = statusMessages[messageIndex++];
+                
+                // Add loading animation to AI indicator
+                const aiIndicator = document.querySelector('.ai-indicator');
+                if (aiIndicator) {
+                    aiIndicator.classList.add('loading');
+                }
+                
+                // Update status every 5 seconds
+                statusInterval = setInterval(() => {
+                    if (messageIndex < statusMessages.length) {
+                        document.getElementById('viewer-status').textContent = statusMessages[messageIndex++];
+                    }
+                }, 5000);
+                
+                // Set up timeout (60 seconds)
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => {
+                        reject(new Error('Request timed out after 60 seconds'));
+                    }, 60000);
+                });
+                
+                // Make the API request with timeout
+                const fetchPromise = fetch(BACKEND_URL + '/api/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1057,6 +1099,15 @@
                         prompt: prompt
                     })
                 });
+                
+                const pipelineResponse = await Promise.race([fetchPromise, timeoutPromise]);
+                
+                // Clear the status interval and remove loading animation
+                clearInterval(statusInterval);
+                const aiIndicator = document.querySelector('.ai-indicator');
+                if (aiIndicator) {
+                    aiIndicator.classList.remove('loading');
+                }
                 
                 const pipeline = await pipelineResponse.json();
                 console.log('Pipeline response:', pipeline);
@@ -1105,7 +1156,22 @@
                 
             } catch (error) {
                 console.error('Error generating model:', error);
-                document.getElementById('viewer-status').textContent = 'Error - showing fallback model';
+                
+                // Clear any running status interval and remove loading animation
+                if (statusInterval) {
+                    clearInterval(statusInterval);
+                }
+                const aiIndicator = document.querySelector('.ai-indicator');
+                if (aiIndicator) {
+                    aiIndicator.classList.remove('loading');
+                }
+                
+                // Handle timeout specifically
+                if (error.message && error.message.includes('timed out')) {
+                    document.getElementById('viewer-status').textContent = 'Request timed out - showing fallback model';
+                } else {
+                    document.getElementById('viewer-status').textContent = 'Error - showing fallback model';
+                }
                 
                 // Fallback to local generation
                 generateModelFallback(prompt);
