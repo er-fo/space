@@ -12,7 +12,8 @@
       "Bash(open test-api.html)",
       "Bash(touch:*)",
       "Bash(python3:*)",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(flyctl deploy:*)"
     ],
     "deny": []
   }

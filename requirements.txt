@@ -5,6 +5,9 @@ Flask==2.3.2
 cadquery
 cadquery-ocp
 
+# HTTP client for API calls
+requests
+
 # Alternative lightweight dependencies (if CadQuery fails)
 numpy
 json5

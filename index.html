@@ -1042,26 +1042,18 @@
         
         async function generateModel(prompt) {
             try {
-                // Configuration - Update these URLs when you deploy
-                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec";
-                const PYTHON_EXECUTOR_URL = "https://cadagent-pro.fly.dev"; // Your Fly.io app URL
+                // Configuration - Using Fly.io backend for complete pipeline
+                const BACKEND_URL = "https://cadagent-pro.fly.dev"; // Your Fly.io app URL
                 
-                // Check if URLs are configured
-                if (GOOGLE_SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") {
-                    console.log('Google Apps Script URL not configured, using fallback');
-                    return generateModelFallback(prompt);
-                }
-                
-                // Step 1: Generate JSON plan and Python code
+                // Generate complete pipeline (JSON plan + Python code + GLTF execution)
                 document.getElementById('viewer-status').textContent = 'Analyzing your request...';
                 
-                const pipelineResponse = await fetch(GOOGLE_SCRIPT_URL, {
+                const pipelineResponse = await fetch(BACKEND_URL + '/api/generate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        action: 'generate_cad_pipeline',
                         prompt: prompt
                     })
                 });
@@ -1070,40 +1062,26 @@
                 console.log('Pipeline response:', pipeline);
                 
                 if (!pipeline.success) {
+                    if (pipeline.error === 'Our backend is busy right now, try again in a couple of minutes') {
+                        document.getElementById('viewer-status').textContent = 'Backend busy - showing fallback model';
+                        return generateModelFallback(prompt);
+                    }
                     throw new Error(pipeline.error || 'Failed to generate CAD pipeline');
                 }
                 
-                // Step 2: Execute Python code (if Python executor is available)
-                if (PYTHON_EXECUTOR_URL !== "YOUR_PYTHON_EXECUTOR_URL_HERE") {
-                    document.getElementById('viewer-status').textContent = 'Executing CadQuery code...';
-                    
-                    const executionResponse = await fetch(PYTHON_EXECUTOR_URL + '/api/execute', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            pythonCode: pipeline.pythonCode
-                        })
-                    });
-                    
-                    const execution = await executionResponse.json();
-                    console.log('Execution response:', execution);
-                    
-                    if (execution.success && execution.gltf) {
-                        // Step 3: Load and display GLTF
-                        document.getElementById('viewer-status').textContent = 'Loading 3D model...';
-                        await loadGLTFModel(execution.gltf);
-                        document.getElementById('viewer-status').textContent = 'Model generated successfully';
-                    } else {
-                        throw new Error(execution.error || 'Failed to execute Python code');
-                    }
-                } else {
+                // If GLTF is available, load it directly
+                if (pipeline.gltf) {
+                    document.getElementById('viewer-status').textContent = 'Loading 3D model...';
+                    await loadGLTFModel(pipeline.gltf);
+                    document.getElementById('viewer-status').textContent = 'Model generated successfully';
+                } else if (pipeline.jsonPlan) {
                     // Fallback: Convert JSON plan to Three.js geometry
                     document.getElementById('viewer-status').textContent = 'Rendering from JSON plan...';
                     const geometry = convertJSONPlanToGeometry(pipeline.jsonPlan);
                     renderModel(geometry);
                     document.getElementById('viewer-status').textContent = 'Model generated from JSON plan';
+                } else {
+                    throw new Error('No valid output received from backend');
                 }
                 
                 // Show completion message
@@ -1255,25 +1233,31 @@
                 color: var(--primary-text);
             `;
             
+            // Handle different pipeline response formats
+            const jsonPlanDisplay = pipeline.jsonPlan ? JSON.stringify(pipeline.jsonPlan, null, 2) : 'Not available';
+            const pythonCodeDisplay = pipeline.pythonCode ? pipeline.pythonCode : 'Not available';
+            const statusMessage = pipeline.gltf ? 'Model Generated Successfully!' : 'Pipeline Generated Successfully!';
+            
             message.innerHTML = `
-                <h3 style="margin-bottom: 16px; color: var(--primary-text); text-align: center;">🎉 Model Generated Successfully!</h3>
+                <h3 style="margin-bottom: 16px; color: var(--primary-text); text-align: center;">🎉 ${statusMessage}</h3>
                 <div style="margin-bottom: 24px;">
                     <h4 style="color: var(--primary-accent); margin-bottom: 8px;">JSON Plan:</h4>
-                    <pre style="background: var(--base-bg); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto;">${JSON.stringify(pipeline.jsonPlan, null, 2)}</pre>
+                    <pre style="background: var(--base-bg); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto; max-height: 200px;">${jsonPlanDisplay}</pre>
                 </div>
                 <div style="margin-bottom: 24px;">
                     <h4 style="color: var(--primary-accent); margin-bottom: 8px;">Python Code:</h4>
-                    <pre style="background: var(--base-bg); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto; max-height: 200px;">${pipeline.pythonCode}</pre>
+                    <pre style="background: var(--base-bg); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto; max-height: 200px;">${pythonCodeDisplay}</pre>
                 </div>
+                ${pipeline.message ? `<div style="margin-bottom: 24px;"><p style="color: var(--secondary-text); font-style: italic;">${pipeline.message}</p></div>` : ''}
                 <div style="text-align: center;">
                     <button onclick="this.parentElement.parentElement.parentElement.remove()" 
                             style="background: var(--gradient-cyan-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 12px;">
                         Close
                     </button>
-                    <button onclick="downloadPythonCode('${btoa(pipeline.pythonCode)}')" 
+                    ${pipeline.pythonCode ? `<button onclick="downloadPythonCode('${btoa(pipeline.pythonCode)}')" 
                             style="background: var(--gradient-purple-violet); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
                         Download Python Code
-                    </button>
+                    </button>` : ''}
                 </div>
             `;
             
