@@ -1,92 +1,181 @@
-# CADAgent PRO Framework
+LLM Handbook: CAD Memory JSON Specification
 
-## Workflow Overview
+This handbook defines how you, the LLM, must write structured JSON plans to describe 3D models, edits, and operations. It supports persistent, interpretable memory of geometry for a CAD system. You must follow these guidelines before generating any Python code.
+1. OBJECT CREATION
 
-The CADAgent PRO framework uses a multi-step process to generate reliable 3D models from natural language descriptions:
+Each solid must be logged as an entry in the "objects" list. This list fully defines all standalone solids and shapes in the model.
 
-1. **Intention Generation** - LLM generates structured JSON describing what should be built
-2. **Code Generation** - LLM generates Python CadQuery code based on the intention
-3. **Validation** - Third party compares intention vs. actual code implementation
-4. **Retry Logic** - If validation fails, retry once with enhanced prompts
-5. **Error Handling** - Show user-friendly error if both attempts fail
-
-## Step 1: Intention Generation
-
-The LLM first analyzes the user's prompt and generates a structured JSON describing the intended 3D model:
-
-```json
+JSON Structure for Object Creation
 {
-  "description": "User's original prompt",
-  "primary_shape": "cube|cylinder|sphere|custom",
-  "dimensions": {
-    "width": 20,
-    "height": 20,
-    "depth": 20,
-    "radius": 10,
-    "diameter": 20
-  },
-  "features": [
-    "hole",
-    "fillet",
-    "chamfer",
-    "thread",
-    "gear_teeth",
-    "angled_support"
+  "objects": [
+    {
+      "name": "Cube_1",
+      "type": "Box",
+      "params": {
+        "width": 50,
+        "height": 50,
+        "depth": 50
+      },
+      "transform": [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+      ]
+    }
+  ]
+}
+Explanation of Each Field:
+name: A unique identifier for the object. Must not be reused. Use clear, meaningful names (e.g. Base_Housing, Support_Pin).
+type: The shape primitive or creation method. Supported values include:
+Box, Cylinder, Sphere, Cone, Torus, Loft, Extrude, etc.
+params: The defining parameters for the object type:
+Box uses width, height, depth.
+Cylinder uses radius, height.
+Loft uses a list of profiles, each with a shape, dimensional values, and a position.
+transform: A 4×4 matrix defining the object's position, orientation, and scaling in 3D space.
+The last column [x, y, z] in rows 0–2 defines the translation.
+The top-left 3×3 part defines orientation and scale.
+The last row is always [0, 0, 0, 1] (homogeneous coordinate padding).
+Always include a transform, even if it is identity (object at origin, no rotation).
+2. GEOMETRIC OPERATIONS (MODIFICATIONS)
+
+Each modification, transformation, or boolean operation must be defined in the "operations" list.
+
+JSON Structure for Operations
+{
+  "operations": [
+    {
+      "action": "fillet_edges",
+      "target": "Cube_1",
+      "edges": "all",
+      "radius": 5
+    },
+    {
+      "action": "translate",
+      "target": "Cube_1",
+      "vector": [0, 0, 25]
+    }
+  ]
+}
+Explanation of Each Field:
+action: What kind of operation to perform.
+target: Name of the object being modified (or targets list if multiple).
+edges: Edge selector. Use:
+"all": all edges
+"vertical", "horizontal", "top", "bottom", etc. for common patterns
+advanced: an array of edge IDs (if available)
+radius: Fillet/chamfer radius (in mm).
+vector: Movement vector for translation [dx, dy, dz].
+angle: Rotation angle in degrees (if used with rotate).
+axis: Optional rotation axis [x, y, z].
+result: Optional name for the output of a boolean (e.g. union).
+Every operation must be tied to a known name created earlier in the objects section.
+3. EXAMPLES
+
+Simple Example: A Centered Cube
+{
+  "objects": [
+    {
+      "name": "Cube_1",
+      "type": "Box",
+      "params": {"width": 50, "height": 50, "depth": 50},
+      "transform": [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
+    }
   ],
-  "materials": "default|metal|plastic|wood",
-  "complexity": "simple|medium|complex",
-  "special_instructions": "Additional notes for implementation"
+  "operations": []
 }
-```
-
-## Step 2: Code Generation
-
-Based on the intention JSON, the LLM generates CadQuery Python code:
-
-```python
-import cadquery as cq
-
-# Create primary shape
-result = cq.Workplane("XY").box(20, 20, 20)
-
-# Add features
-result = result.faces(">Z").workplane().hole(5)
-
-# Apply finishing
-result = result.edges().fillet(2)
-```
-
-## Step 3: Validation
-
-A third party (separate LLM call) compares the intention JSON with the generated code and returns a validation result:
-
-```json
+Medium Example: Cylinder + Fillet + Translate
 {
-  "valid": true,
-  "issues": [],
-  "missing_features": [],
-  "incorrect_dimensions": [],
-  "confidence": 0.95
+  "objects": [
+    {
+      "name": "Base_Cylinder",
+      "type": "Cylinder",
+      "params": {"radius": 25, "height": 10},
+      "transform": [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
+    }
+  ],
+  "operations": [
+    {
+      "action": "fillet_edges",
+      "target": "Base_Cylinder",
+      "edges": "vertical",
+      "radius": 2
+    },
+    {
+      "action": "translate",
+      "target": "Base_Cylinder",
+      "vector": [0, 0, 10]
+    }
+  ]
 }
-```
+Hard Example: Loft, Box, Union, Fillet
+{
+  "objects": [
+    {
+      "name": "Loft_1",
+      "type": "Loft",
+      "params": {
+        "profiles": [
+          {"shape": "Circle", "radius": 10, "position": [0, 0, 0]},
+          {"shape": "Rectangle", "width": 20, "height": 20, "position": [0, 0, 40]}
+        ]
+      },
+      "transform": [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
+    },
+    {
+      "name": "Mounting_Box",
+      "type": "Box",
+      "params": {"width": 40, "height": 20, "depth": 10},
+      "transform": [[1,0,0,10],[0,1,0,0],[0,0,1,40],[0,0,0,1]]
+    }
+  ],
+  "operations": [
+    {
+      "action": "union",
+      "targets": ["Loft_1", "Mounting_Box"],
+      "result": "Combined_Body"
+    },
+    {
+      "action": "fillet_edges",
+      "target": "Combined_Body",
+      "edges": "all",
+      "radius": 3
+    }
+  ]
+}
+4. GUIDELINES FOR GENERATING JSON
 
-## Step 4: Retry Logic
+Always:
+Use unique, descriptive names for every object.
+Fully define shape parameters (params) based on object type.
+Use complete 4×4 transformation matrices in every object.
+Log every object and operation — nothing is implicit.
+When modifying:
+Match object names exactly (target must match an earlier name).
+Include only relevant operation-specific fields (e.g., vector, radius).
+If an operation creates a new shape (e.g., union), use the result field.
+Edge Selectors:
+Use string-based selectors for convenience: "all", "vertical", "top".
+Avoid edge ID arrays unless precise control is needed.
+If unsure:
+Use "all" edges in operations unless explicitly filtering.
+If no transform is needed, use the identity matrix.
+5. Output Format
 
-If validation fails (confidence < 0.8 or critical issues found):
-1. Enhanced prompt with specific feedback
-2. Second attempt at code generation
-3. If second attempt also fails, show error to user
+Your final JSON block must contain:
 
-## Step 5: Error Handling
+{
+  "objects": [ … ],
+  "operations": [ … ]
+}
+This block is parsed before code is executed.
+It is treated as the single source of truth for scene memory.
+Do not include Python code here — generate that only after the JSON.
+Final Notes
 
-User-friendly error messages:
-- "There was an issue at our backend, please try again"
-- Fallback to demo model if available
-- Log detailed errors for debugging
-
-## Implementation Notes
-
-- All steps happen server-side in Google Apps Script
-- Frontend only sees final success/failure result
-- Validation ensures code quality before showing to user
-- Maximum 2 attempts to maintain reasonable response time
+You must generate a JSON plan before any code.
+All geometry and operations are tracked using this structure.
+This enables perfect memory of what’s been built and how.
+JSON → persistent world model; code → execution.
+Follow this handbook precisely.

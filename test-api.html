@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CADAgent API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #0BA5EC;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0969CB;
+        }
+        .results {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CADAgent PRO API Test</h1>
+    
+    <div class="test-section">
+        <h2>Configuration</h2>
+        <label>Google Apps Script URL:</label>
+        <input type="text" id="scriptUrl" value="https://script.google.com/macros/s/AKfycbwPymdl6bp74MCpNwRBQ_gP2d5IGP7On-zxUbwQK4HY4YOqwvbWtfspNNo8phdCIlEG/exec">
+        <button onclick="updateUrl()">Update URL</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Health Check</h2>
+        <button onclick="testHealth()">Test GET /health</button>
+        <div id="healthResults" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Generate Model</h2>
+        <input type="text" id="promptInput" placeholder="Enter CAD prompt (e.g., 'Create a 20mm cube')" value="Create a 20mm cube">
+        <button onclick="testGenerate()">Test Generate</button>
+        <div id="generateResults" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="summary" class="results"></div>
+    </div>
+
+    <script>
+        let SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPymdl6bp74MCpNwRBQ_gP2d5IGP7On-zxUbwQK4HY4YOqwvbWtfspNNo8phdCIlEG/exec";
+        let testResults = [];
+
+        function updateUrl() {
+            SCRIPT_URL = document.getElementById('scriptUrl').value;
+            document.getElementById('summary').textContent = `Updated URL to: ${SCRIPT_URL}`;
+        }
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResults');
+            resultDiv.textContent = 'Testing health endpoint...';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                const endTime = Date.now();
+                
+                const data = await response.json();
+                
+                const result = {
+                    test: 'Health Check',
+                    success: response.ok,
+                    status: response.status,
+                    responseTime: `${endTime - startTime}ms`,
+                    data: data
+                };
+                
+                testResults.push(result);
+                
+                resultDiv.className = 'results ' + (response.ok ? 'success' : 'error');
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+                
+                updateSummary();
+                
+            } catch (error) {
+                const result = {
+                    test: 'Health Check',
+                    success: false,
+                    error: error.message
+                };
+                
+                testResults.push(result);
+                
+                resultDiv.className = 'results error';
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+                
+                updateSummary();
+            }
+        }
+
+        async function testGenerate() {
+            const resultDiv = document.getElementById('generateResults');
+            const prompt = document.getElementById('promptInput').value;
+            
+            if (!prompt) {
+                resultDiv.className = 'results error';
+                resultDiv.textContent = 'Please enter a prompt';
+                return;
+            }
+            
+            resultDiv.textContent = 'Testing generate endpoint...';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'generate',
+                        prompt: prompt
+                    })
+                });
+                const endTime = Date.now();
+                
+                const data = await response.json();
+                
+                const result = {
+                    test: 'Generate Model',
+                    success: response.ok && data.success,
+                    status: response.status,
+                    responseTime: `${endTime - startTime}ms`,
+                    prompt: prompt,
+                    data: data
+                };
+                
+                testResults.push(result);
+                
+                resultDiv.className = 'results ' + (result.success ? 'success' : 'error');
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+                
+                updateSummary();
+                
+            } catch (error) {
+                const result = {
+                    test: 'Generate Model',
+                    success: false,
+                    error: error.message
+                };
+                
+                testResults.push(result);
+                
+                resultDiv.className = 'results error';
+                resultDiv.textContent = JSON.stringify(result, null, 2);
+                
+                updateSummary();
+            }
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary');
+            const totalTests = testResults.length;
+            const successfulTests = testResults.filter(r => r.success).length;
+            
+            const summary = {
+                totalTests: totalTests,
+                successful: successfulTests,
+                failed: totalTests - successfulTests,
+                successRate: totalTests > 0 ? Math.round((successfulTests / totalTests) * 100) + '%' : '0%',
+                lastUpdated: new Date().toLocaleTimeString()
+            };
+            
+            summaryDiv.className = 'results';
+            summaryDiv.textContent = JSON.stringify(summary, null, 2);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('scriptUrl').value = SCRIPT_URL;
+        });
+    </script>
+</body>
+</html>

@@ -1041,24 +1041,31 @@
         
         async function generateModel(prompt) {
             try {
-                // Google Apps Script URL
-                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyF6KKhd2_Q2cLzGROL8yNZLWtg9xQjo_GbOKTwX0L1I06_uC6lz8yvQdapPYFjtOjb/exec";
+                // Google Apps Script URL (update with your new deployment URL)
+                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPymBzQGgDyqthb1orKDv6N3rkWZvK99gYyFXKh-RN7Yoi_QMcDicdPP2SzxrxIkpI/exec";
                 
                 // Update status to show processing steps
                 document.getElementById('viewer-status').textContent = 'Analyzing your request...';
+                
+                const payload = { 
+                    action: 'generate',
+                    prompt: prompt 
+                };
+                console.log('Sending to API:', payload);
                 
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ 
-                        action: 'generate',
-                        prompt: prompt 
-                    })
+                    body: JSON.stringify(payload)
                 });
                 
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
                 const data = await response.json();
+                console.log('API Response:', data);
                 
                 if (data.success) {
                     document.getElementById('viewer-status').textContent = 'Rendering 3D model...';
@@ -1091,6 +1098,7 @@
                 
             } catch (error) {
                 console.error('Error generating model:', error);
+                console.log('Full error details:', error.message);
                 document.getElementById('viewer-status').textContent = 'Connection error - showing demo model';
                 
                 // Fallback to demo model
@@ -1122,6 +1130,12 @@
                         mesh = new THREE.Mesh(geometry, material);
                         break;
                         
+                    case 'sphere':
+                        geometry = new THREE.SphereGeometry(obj.radius, 32, 32);
+                        material = new THREE.MeshPhongMaterial({ color: 0x6EE7B7 });
+                        mesh = new THREE.Mesh(geometry, material);
+                        break;
+                        
                     case 'polygon':
                         geometry = new THREE.CylinderGeometry(obj.radius, obj.radius, obj.height, obj.sides);
                         material = new THREE.MeshPhongMaterial({ color: 0xF472B6 });
@@ -1136,6 +1150,9 @@
                 
                 if (mesh) {
                     mesh.position.set(...obj.position);
+                    if (obj.rotation) {
+                        mesh.rotation.set(...obj.rotation);
+                    }
                     mesh.castShadow = true;
                     mesh.receiveShadow = true;
                     group.add(mesh);
@@ -1169,30 +1186,133 @@
         }
         
         function renderDemoModel(prompt) {
-            // Fallback demo models
+            // Enhanced fallback demo models that actually showcase features
             const demoGeometry = {
                 type: "mesh",
-                objects: [
-                    {
-                        type: "box",
-                        width: 20,
-                        height: 20,
-                        depth: 20,
-                        position: [0, 0, 0]
-                    }
-                ]
+                objects: []
             };
             
-            if (prompt.toLowerCase().includes('hole')) {
+            const lowerPrompt = prompt.toLowerCase();
+            
+            // Detect shape type and create appropriate model
+            if (lowerPrompt.includes('cylinder') || lowerPrompt.includes('gear')) {
+                // Cylinder or gear
+                const radius = extractNumber(prompt, 'radius') || extractNumber(prompt, 'diameter', 0.5) || 10;
+                const height = extractNumber(prompt, 'height') || 20;
+                
+                demoGeometry.objects.push({
+                    type: "cylinder",
+                    radius: radius,
+                    height: height,
+                    position: [0, 0, 0]
+                });
+                
+                // Add gear teeth if mentioned
+                if (lowerPrompt.includes('gear') || lowerPrompt.includes('teeth')) {
+                    const teeth = extractNumber(prompt, 'teeth') || 12;
+                    // Create gear teeth as small cylinders around the main cylinder
+                    for (let i = 0; i < teeth; i++) {
+                        const angle = (i / teeth) * Math.PI * 2;
+                        const x = Math.cos(angle) * (radius + 2);
+                        const z = Math.sin(angle) * (radius + 2);
+                        demoGeometry.objects.push({
+                            type: "cylinder",
+                            radius: 1,
+                            height: height + 2,
+                            position: [x, 0, z]
+                        });
+                    }
+                }
+            } else if (lowerPrompt.includes('sphere') || lowerPrompt.includes('ball')) {
+                // Sphere
+                const radius = extractNumber(prompt, 'radius') || extractNumber(prompt, 'diameter', 0.5) || 10;
+                demoGeometry.objects.push({
+                    type: "sphere",
+                    radius: radius,
+                    position: [0, 0, 0]
+                });
+            } else if (lowerPrompt.includes('hexagon') || lowerPrompt.includes('nut')) {
+                // Hexagonal nut
+                const radius = extractNumber(prompt, 'radius') || 8;
+                const height = extractNumber(prompt, 'height') || 6;
+                demoGeometry.objects.push({
+                    type: "polygon",
+                    sides: 6,
+                    radius: radius,
+                    height: height,
+                    position: [0, 0, 0]
+                });
+            } else if (lowerPrompt.includes('stand') || lowerPrompt.includes('angle')) {
+                // Phone stand or angled object
+                const angle = extractNumber(prompt, 'angle') || extractNumber(prompt, 'degree') || 60;
+                
+                // Base
+                demoGeometry.objects.push({
+                    type: "box",
+                    width: 40,
+                    height: 3,
+                    depth: 25,
+                    position: [0, -10, 0]
+                });
+                
+                // Angled support
+                demoGeometry.objects.push({
+                    type: "box",
+                    width: 25,
+                    height: 2,
+                    depth: 30,
+                    position: [0, 5, 8],
+                    rotation: [Math.PI * angle / 180, 0, 0]
+                });
+            } else {
+                // Default to cube with extracted dimensions
+                const size = extractNumber(prompt, 'size') || 
+                           extractNumber(prompt, 'width') || 
+                           extractNumber(prompt, 'mm') || 20;
+                const width = extractNumber(prompt, 'width') || size;
+                const height = extractNumber(prompt, 'height') || size;
+                const depth = extractNumber(prompt, 'depth') || size;
+                
+                demoGeometry.objects.push({
+                    type: "box",
+                    width: width,
+                    height: height,
+                    depth: depth,
+                    position: [0, 0, 0]
+                });
+            }
+            
+            // Add holes if mentioned
+            if (lowerPrompt.includes('hole')) {
+                const holeDiameter = extractNumber(prompt, 'hole') || 5;
                 demoGeometry.objects.push({
                     type: "hole",
-                    diameter: 5,
+                    diameter: holeDiameter,
                     position: [0, 0, 0]
                 });
             }
             
             renderModel(demoGeometry);
             document.getElementById('viewer-status').textContent = 'Demo model (API unavailable)';
+        }
+        
+        function extractNumber(text, keyword, multiplier = 1) {
+            // Extract numbers that appear near keywords
+            const regex = new RegExp(`(?:${keyword}[^\\d]*)(\\d+(?:\\.\\d+)?)`, 'i');
+            const match = text.match(regex);
+            if (match) {
+                return parseFloat(match[1]) * multiplier;
+            }
+            
+            // Also try to find standalone numbers followed by 'mm'
+            if (keyword === 'mm') {
+                const mmMatch = text.match(/(\d+(?:\.\d+)?)mm/i);
+                if (mmMatch) {
+                    return parseFloat(mmMatch[1]);
+                }
+            }
+            
+            return null;
         }
         
         function resetView() {
@@ -1260,6 +1380,20 @@
             document.body.appendChild(overlay);
         }
         
+        // Test Google Apps Script connection
+        async function testAPIConnection() {
+            try {
+                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyF6KKhd2_Q2cLzGROL8yNZLWtg9xQjo_GbOKTwX0L1I06_uC6lz8yvQdapPYFjtOjb/exec";
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'GET'
+                });
+                const data = await response.json();
+                console.log('API Health Check:', data);
+            } catch (error) {
+                console.error('API Connection Failed:', error);
+            }
+        }
+
         // Add Enter key support
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('demo-input').addEventListener('keypress', function(e) {
@@ -1267,6 +1401,9 @@
                     submitDemo();
                 }
             });
+            
+            // Test API connection on page load
+            testAPIConnection();
         });
 
         document.addEventListener('DOMContentLoaded', function() {
