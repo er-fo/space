@@ -11,7 +11,8 @@
       "Bash(git push:*)",
       "Bash(open test-api.html)",
       "Bash(touch:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(open:*)"
     ],
     "deny": []
   }

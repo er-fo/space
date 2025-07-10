@@ -1,0 +1,10 @@
+# Flask web server
+Flask==2.3.2
+
+# Core dependencies for CadQuery execution
+cadquery
+cadquery-ocp
+
+# Alternative lightweight dependencies (if CadQuery fails)
+numpy
+json5

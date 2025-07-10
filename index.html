@@ -23,6 +23,7 @@
     <!-- Three.js for 3D rendering -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
     <style>
         :root {
@@ -1041,69 +1042,360 @@
         
         async function generateModel(prompt) {
             try {
-                // Google Apps Script URL (update with your new deployment URL)
-                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPymBzQGgDyqthb1orKDv6N3rkWZvK99gYyFXKh-RN7Yoi_QMcDicdPP2SzxrxIkpI/exec";
+                // Configuration - Update these URLs when you deploy
+                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec";
+                const PYTHON_EXECUTOR_URL = "https://cadagent-pro.fly.dev"; // Your Fly.io app URL
                 
-                // Update status to show processing steps
+                // Check if URLs are configured
+                if (GOOGLE_SCRIPT_URL === "YOUR_GOOGLE_SCRIPT_URL_HERE") {
+                    console.log('Google Apps Script URL not configured, using fallback');
+                    return generateModelFallback(prompt);
+                }
+                
+                // Step 1: Generate JSON plan and Python code
                 document.getElementById('viewer-status').textContent = 'Analyzing your request...';
                 
-                const payload = { 
-                    action: 'generate',
-                    prompt: prompt 
-                };
-                console.log('Sending to API:', payload);
-                
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                const pipelineResponse = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        action: 'generate_cad_pipeline',
+                        prompt: prompt
+                    })
                 });
                 
-                console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
+                const pipeline = await pipelineResponse.json();
+                console.log('Pipeline response:', pipeline);
                 
-                const data = await response.json();
-                console.log('API Response:', data);
-                
-                if (data.success) {
-                    document.getElementById('viewer-status').textContent = 'Rendering 3D model...';
-                    
-                    // Add a small delay to show the status
-                    setTimeout(() => {
-                        renderModel(data.geometry);
-                        document.getElementById('viewer-status').textContent = 'Model generated successfully';
-                        
-                        // Show limit message after generation
-                        setTimeout(() => {
-                            showLimitMessage();
-                        }, 2000);
-                    }, 500);
-                } else {
-                    // Show user-friendly error message
-                    document.getElementById('viewer-status').textContent = data.error || 'Generation failed';
-                    
-                    // If it's a backend error, show fallback
-                    if (data.error && data.error.includes('backend')) {
-                        setTimeout(() => {
-                            renderDemoModel(prompt);
-                            document.getElementById('viewer-status').textContent = 'Demo model (backend unavailable)';
-                        }, 1500);
-                    } else {
-                        // For other errors, show fallback immediately
-                        renderDemoModel(prompt);
-                    }
+                if (!pipeline.success) {
+                    throw new Error(pipeline.error || 'Failed to generate CAD pipeline');
                 }
+                
+                // Step 2: Execute Python code (if Python executor is available)
+                if (PYTHON_EXECUTOR_URL !== "YOUR_PYTHON_EXECUTOR_URL_HERE") {
+                    document.getElementById('viewer-status').textContent = 'Executing CadQuery code...';
+                    
+                    const executionResponse = await fetch(PYTHON_EXECUTOR_URL + '/api/execute', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            pythonCode: pipeline.pythonCode
+                        })
+                    });
+                    
+                    const execution = await executionResponse.json();
+                    console.log('Execution response:', execution);
+                    
+                    if (execution.success && execution.gltf) {
+                        // Step 3: Load and display GLTF
+                        document.getElementById('viewer-status').textContent = 'Loading 3D model...';
+                        await loadGLTFModel(execution.gltf);
+                        document.getElementById('viewer-status').textContent = 'Model generated successfully';
+                    } else {
+                        throw new Error(execution.error || 'Failed to execute Python code');
+                    }
+                } else {
+                    // Fallback: Convert JSON plan to Three.js geometry
+                    document.getElementById('viewer-status').textContent = 'Rendering from JSON plan...';
+                    const geometry = convertJSONPlanToGeometry(pipeline.jsonPlan);
+                    renderModel(geometry);
+                    document.getElementById('viewer-status').textContent = 'Model generated from JSON plan';
+                }
+                
+                // Show completion message
+                setTimeout(() => {
+                    showCompletionMessage(pipeline);
+                }, 2000);
                 
             } catch (error) {
                 console.error('Error generating model:', error);
-                console.log('Full error details:', error.message);
-                document.getElementById('viewer-status').textContent = 'Connection error - showing demo model';
+                document.getElementById('viewer-status').textContent = 'Error - showing fallback model';
                 
-                // Fallback to demo model
-                renderDemoModel(prompt);
+                // Fallback to local generation
+                generateModelFallback(prompt);
             }
+        }
+        
+        async function generateModelFallback(prompt) {
+            document.getElementById('viewer-status').textContent = 'Generating demo model...';
+            
+            // Use the existing local analysis
+            const geometry = analyzePromptAndGenerateGeometry(prompt);
+            
+            setTimeout(() => {
+                renderModel(geometry);
+                document.getElementById('viewer-status').textContent = 'Demo model generated';
+                
+                setTimeout(() => {
+                    showLimitMessage();
+                }, 2000);
+            }, 1000);
+        }
+        
+        async function loadGLTFModel(gltfContent) {
+            return new Promise((resolve, reject) => {
+                const loader = new THREE.GLTFLoader();
+                
+                // Parse GLTF content
+                loader.parse(gltfContent, '', (gltf) => {
+                    // Clear previous model
+                    if (currentModel) {
+                        scene.remove(currentModel);
+                    }
+                    
+                    // Add new model
+                    const model = gltf.scene;
+                    scene.add(model);
+                    currentModel = model;
+                    
+                    // Center camera on model
+                    const box = new THREE.Box3().setFromObject(model);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    
+                    const maxSize = Math.max(size.x, size.y, size.z);
+                    camera.position.set(center.x + maxSize, center.y + maxSize, center.z + maxSize);
+                    controls.target.copy(center);
+                    controls.update();
+                    
+                    resolve(model);
+                }, (error) => {
+                    console.error('GLTF parsing error:', error);
+                    reject(error);
+                });
+            });
+        }
+        
+        function convertJSONPlanToGeometry(jsonPlan) {
+            const geometry = {
+                type: "mesh",
+                objects: []
+            };
+            
+            if (!jsonPlan || !jsonPlan.objects) {
+                return geometry;
+            }
+            
+            jsonPlan.objects.forEach(obj => {
+                const geometryObj = {
+                    position: [0, 0, 0]
+                };
+                
+                // Extract position from transform matrix if available
+                if (obj.transform && obj.transform.length === 4) {
+                    geometryObj.position = [
+                        obj.transform[0][3] || 0,
+                        obj.transform[1][3] || 0,
+                        obj.transform[2][3] || 0
+                    ];
+                }
+                
+                switch (obj.type) {
+                    case 'Box':
+                        geometryObj.type = 'box';
+                        geometryObj.width = obj.params.width || 20;
+                        geometryObj.height = obj.params.height || 20;
+                        geometryObj.depth = obj.params.depth || 20;
+                        break;
+                        
+                    case 'Cylinder':
+                        geometryObj.type = 'cylinder';
+                        geometryObj.radius = obj.params.radius || 10;
+                        geometryObj.height = obj.params.height || 20;
+                        break;
+                        
+                    case 'Sphere':
+                        geometryObj.type = 'sphere';
+                        geometryObj.radius = obj.params.radius || 10;
+                        break;
+                        
+                    default:
+                        geometryObj.type = 'box';
+                        geometryObj.width = 20;
+                        geometryObj.height = 20;
+                        geometryObj.depth = 20;
+                }
+                
+                geometry.objects.push(geometryObj);
+            });
+            
+            return geometry;
+        }
+        
+        function showCompletionMessage(pipeline) {
+            // Create overlay with pipeline details
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            `;
+            
+            const message = document.createElement('div');
+            message.style.cssText = `
+                background: var(--surface);
+                border: 1px solid var(--panel-border);
+                border-radius: 12px;
+                padding: 32px;
+                max-width: 600px;
+                max-height: 80vh;
+                overflow-y: auto;
+                text-align: left;
+                color: var(--primary-text);
+            `;
+            
+            message.innerHTML = `
+                <h3 style="margin-bottom: 16px; color: var(--primary-text); text-align: center;">🎉 Model Generated Successfully!</h3>
+                <div style="margin-bottom: 24px;">
+                    <h4 style="color: var(--primary-accent); margin-bottom: 8px;">JSON Plan:</h4>
+                    <pre style="background: var(--base-bg); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto;">${JSON.stringify(pipeline.jsonPlan, null, 2)}</pre>
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <h4 style="color: var(--primary-accent); margin-bottom: 8px;">Python Code:</h4>
+                    <pre style="background: var(--base-bg); padding: 12px; border-radius: 6px; font-size: 12px; overflow-x: auto; max-height: 200px;">${pipeline.pythonCode}</pre>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                            style="background: var(--gradient-cyan-blue); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 12px;">
+                        Close
+                    </button>
+                    <button onclick="downloadPythonCode('${btoa(pipeline.pythonCode)}')" 
+                            style="background: var(--gradient-purple-violet); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Download Python Code
+                    </button>
+                </div>
+            `;
+            
+            overlay.appendChild(message);
+            document.body.appendChild(overlay);
+        }
+        
+        function downloadPythonCode(base64Code) {
+            const code = atob(base64Code);
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cadquery_model.py';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function analyzePromptAndGenerateGeometry(prompt) {
+            const geometry = {
+                type: "mesh",
+                objects: []
+            };
+            
+            const lowerPrompt = prompt.toLowerCase();
+            
+            // Enhanced prompt analysis with better pattern matching
+            if (lowerPrompt.includes('cylinder') || lowerPrompt.includes('gear')) {
+                const radius = extractNumber(prompt, 'radius') || extractNumber(prompt, 'diameter', 0.5) || 10;
+                const height = extractNumber(prompt, 'height') || 20;
+                
+                geometry.objects.push({
+                    type: "cylinder",
+                    radius: radius,
+                    height: height,
+                    position: [0, 0, 0]
+                });
+                
+                // Add gear teeth if mentioned
+                if (lowerPrompt.includes('gear') || lowerPrompt.includes('teeth')) {
+                    const teeth = extractNumber(prompt, 'teeth') || 12;
+                    for (let i = 0; i < teeth; i++) {
+                        const angle = (i / teeth) * Math.PI * 2;
+                        const x = Math.cos(angle) * (radius + 2);
+                        const z = Math.sin(angle) * (radius + 2);
+                        geometry.objects.push({
+                            type: "cylinder",
+                            radius: 1,
+                            height: height + 2,
+                            position: [x, 0, z]
+                        });
+                    }
+                }
+            } else if (lowerPrompt.includes('sphere') || lowerPrompt.includes('ball')) {
+                const radius = extractNumber(prompt, 'radius') || extractNumber(prompt, 'diameter', 0.5) || 10;
+                geometry.objects.push({
+                    type: "sphere",
+                    radius: radius,
+                    position: [0, 0, 0]
+                });
+            } else if (lowerPrompt.includes('hexagon') || lowerPrompt.includes('nut')) {
+                const radius = extractNumber(prompt, 'radius') || 8;
+                const height = extractNumber(prompt, 'height') || 6;
+                geometry.objects.push({
+                    type: "polygon",
+                    sides: 6,
+                    radius: radius,
+                    height: height,
+                    position: [0, 0, 0]
+                });
+            } else if (lowerPrompt.includes('stand') || lowerPrompt.includes('angle')) {
+                const angle = extractNumber(prompt, 'angle') || extractNumber(prompt, 'degree') || 60;
+                
+                // Base
+                geometry.objects.push({
+                    type: "box",
+                    width: 40,
+                    height: 3,
+                    depth: 25,
+                    position: [0, -10, 0]
+                });
+                
+                // Angled support
+                geometry.objects.push({
+                    type: "box",
+                    width: 25,
+                    height: 2,
+                    depth: 30,
+                    position: [0, 5, 8],
+                    rotation: [Math.PI * angle / 180, 0, 0]
+                });
+            } else {
+                // Default to cube with extracted dimensions
+                const size = extractNumber(prompt, 'size') || 
+                           extractNumber(prompt, 'width') || 
+                           extractNumber(prompt, 'mm') || 20;
+                const width = extractNumber(prompt, 'width') || size;
+                const height = extractNumber(prompt, 'height') || size;
+                const depth = extractNumber(prompt, 'depth') || size;
+                
+                geometry.objects.push({
+                    type: "box",
+                    width: width,
+                    height: height,
+                    depth: depth,
+                    position: [0, 0, 0]
+                });
+            }
+            
+            // Add holes if mentioned
+            if (lowerPrompt.includes('hole')) {
+                const holeDiameter = extractNumber(prompt, 'hole') || 5;
+                geometry.objects.push({
+                    type: "hole",
+                    diameter: holeDiameter,
+                    position: [0, 0, 0]
+                });
+            }
+            
+            return geometry;
         }
         
         function renderModel(geometryData) {
@@ -1380,20 +1672,6 @@
             document.body.appendChild(overlay);
         }
         
-        // Test Google Apps Script connection
-        async function testAPIConnection() {
-            try {
-                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyF6KKhd2_Q2cLzGROL8yNZLWtg9xQjo_GbOKTwX0L1I06_uC6lz8yvQdapPYFjtOjb/exec";
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'GET'
-                });
-                const data = await response.json();
-                console.log('API Health Check:', data);
-            } catch (error) {
-                console.error('API Connection Failed:', error);
-            }
-        }
-
         // Add Enter key support
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('demo-input').addEventListener('keypress', function(e) {
@@ -1401,13 +1679,9 @@
                     submitDemo();
                 }
             });
-            
-            // Test API connection on page load
-            testAPIConnection();
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxPlvx22GLNoxfA8gD-WFApZB3P90911S3tDNfZ9yK7zBXNBVJXAgHPCv6zgYug06upyQ/exec";
             const form = document.getElementById('waitlist-form');
             const messageDiv = document.getElementById('message');
             const accountCTA = document.querySelector('.auth-alternative');
@@ -1443,29 +1717,47 @@
                 messageDiv.style.display = 'none';
                 messageDiv.className = 'message';
 
-                const requestURL = `${SCRIPT_URL}?action=signup&email=${encodeURIComponent(email)}`;
+                // Call your Google Apps Script for waitlist signup
+                // Replace this URL with your actual waitlist Google Apps Script endpoint
+                const WAITLIST_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_WAITLIST_SCRIPT_ID/exec';
+                
+                // Validate email format
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    messageDiv.textContent = 'Please enter a valid email address';
+                    messageDiv.classList.add('error-message');
+                    messageDiv.style.display = 'block';
+                    button.disabled = false;
+                    button.textContent = 'Get Early Access';
+                    return;
+                }
 
-                fetch(requestURL)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status === 'success' || data.status === 'ok') {
-                            form.style.display = 'none';
-                            messageDiv.textContent = data.message || "Thanks for joining! We'll be in touch soon with your free early access.";
-                            messageDiv.classList.add('success-message');
-                            messageDiv.style.display = 'block';
-                        } else {
-                           throw new Error(data.error || 'An unknown error occurred.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error!', error.message);
-                        messageDiv.textContent = 'Something went wrong. Please check your email and try again.';
-                        messageDiv.classList.add('error-message');
-                        messageDiv.style.display = 'block';
+                // Make GET request to Google Apps Script
+                const signupUrl = `${WAITLIST_SCRIPT_URL}?action=signup&email=${encodeURIComponent(email)}`;
+                
+                fetch(signupUrl, {
+                    method: 'GET',
+                    mode: 'no-cors' // Required for Google Apps Script
+                })
+                .then(() => {
+                    // Success handling (no-cors mode means we can't read the response)
+                    form.style.display = 'none';
+                    messageDiv.textContent = "Thanks for joining! We'll be in touch soon with your free early access.";
+                    messageDiv.classList.add('success-message');
+                    messageDiv.style.display = 'block';
+                    
+                    // Track signup
+                    console.log('Waitlist signup:', email);
+                })
+                .catch(error => {
+                    console.error('Error!', error.message);
+                    messageDiv.textContent = 'Something went wrong. Please check your email and try again.';
+                    messageDiv.classList.add('error-message');
+                    messageDiv.style.display = 'block';
 
-                        button.disabled = false;
-                        button.textContent = 'Get Early Access';
-                    });
+                    button.disabled = false;
+                    button.textContent = 'Get Early Access';
+                });
             });
         });
     </script>
