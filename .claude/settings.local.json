@@ -15,7 +15,8 @@
       "Bash(open:*)",
       "Bash(flyctl deploy:*)",
       "Bash(python:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

@@ -158,12 +158,22 @@ def execute_cadquery(python_code):
                 gltf_files = [f for f in os.listdir('.') if f.endswith('.gltf')]
                 
                 if not gltf_files:
-                    raise FileNotFoundError("No GLTF file was generated. Make sure your code includes result.export_gltf('output.gltf')")
+                    raise FileNotFoundError("No GLTF file was generated. Make sure your code includes assembly.save('output.gltf')")
                 
                 # Read the first GLTF file found
                 gltf_path = gltf_files[0]
-                with open(gltf_path, 'r', encoding='utf-8') as f:
-                    gltf_content = f.read()
+                try:
+                    # Try reading as text first (JSON GLTF)
+                    with open(gltf_path, 'r', encoding='utf-8') as f:
+                        gltf_content = f.read()
+                    return gltf_content
+                except UnicodeDecodeError:
+                    # Binary GLTF - read as base64
+                    import base64
+                    with open(gltf_path, 'rb') as f:
+                        binary_content = f.read()
+                    # Return as data URL for Three.js GLTFLoader
+                    return f"data:model/gltf-binary;base64,{base64.b64encode(binary_content).decode('utf-8')}"
                 
                 return gltf_content
                 
@@ -277,7 +287,7 @@ RULES:
 - Include complete 4×4 transformation matrices
 - All dimensions in millimeters
 - Generate clean, executable CadQuery code
-- Always end with: result.export_gltf("output.gltf")
+- Always end with: assembly = cq.Assembly(); assembly.add(result, name="part"); assembly.save("output.gltf")
 
 Your response must have TWO sections:
 1. JSON_PLAN: The structured JSON following CAD Memory specification
@@ -517,8 +527,10 @@ import cadquery as cq
 # Create cylinder
 result = cq.Workplane("XY").cylinder({geometry['params']['height']}, {geometry['params']['radius']})
 
-# Export as GLTF
-result.export_gltf("output.gltf")
+# Export as GLTF using Assembly
+assembly = cq.Assembly()
+assembly.add(result, name="cylinder")
+assembly.save("output.gltf")
 '''
     elif geometry['type'] == 'Sphere':
         return f'''
@@ -527,8 +539,10 @@ import cadquery as cq
 # Create sphere
 result = cq.Workplane("XY").sphere({geometry['params']['radius']})
 
-# Export as GLTF
-result.export_gltf("output.gltf")
+# Export as GLTF using Assembly
+assembly = cq.Assembly()
+assembly.add(result, name="sphere")
+assembly.save("output.gltf")
 '''
     else:
         return f'''
@@ -537,8 +551,10 @@ import cadquery as cq
 # Create box
 result = cq.Workplane("XY").box({geometry['params']['width']}, {geometry['params']['depth']}, {geometry['params']['height']})
 
-# Export as GLTF
-result.export_gltf("output.gltf")
+# Export as GLTF using Assembly
+assembly = cq.Assembly()
+assembly.add(result, name="box")
+assembly.save("output.gltf")
 '''
 
 def check_modules():
