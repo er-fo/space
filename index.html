@@ -1030,7 +1030,10 @@
             const input = document.getElementById('demo-input');
             const prompt = input.value.trim();
             
-            if (!prompt) return;
+            if (!prompt) {
+                alert('Please enter a prompt to generate a 3D model');
+                return;
+            }
             
             demoUsed = true;
             
