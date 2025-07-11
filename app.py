@@ -3,7 +3,7 @@ Flask application for CADAgent PRO
 Serves static files and provides CAD generation API
 """
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, Response
 import json
 import os
 import sys
@@ -14,6 +14,11 @@ import requests
 from typing import Dict, Any, Optional
 
 app = Flask(__name__)
+
+# Configure Flask for larger responses
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False  # Disable pretty printing for efficiency
+app.config['JSON_AS_ASCII'] = False  # Allow non-ASCII characters in JSON responses
 
 # Serve static files
 @app.route('/')
@@ -58,8 +63,53 @@ def generate_demo():
         # Generate complete CAD pipeline
         pipeline_result = generate_cad_pipeline(prompt)
         
-        response = jsonify(pipeline_result)
-        response.headers.add('Access-Control-Allow-Origin', '*')
+        # Enhanced debug logging for complete pipeline
+        print(f"=== PIPELINE RESULT DEBUG ===")
+        print(f"Pipeline success: {pipeline_result.get('success', 'Unknown')}")
+        print(f"Pipeline keys: {list(pipeline_result.keys())}")
+        
+        if 'error' in pipeline_result:
+            print(f"Pipeline error: {pipeline_result['error']}")
+        
+        if 'jsonPlan' in pipeline_result:
+            json_plan = pipeline_result['jsonPlan']
+            print(f"JSON Plan type: {type(json_plan)}")
+            print(f"JSON Plan: {json_plan}")
+        
+        if 'pythonCode' in pipeline_result:
+            python_code = pipeline_result['pythonCode']
+            print(f"Python code length: {len(python_code) if python_code else 'None'}")
+            if python_code:
+                print(f"Python code preview:")
+                print(python_code[:200] + "..." if len(python_code) > 200 else python_code)
+        
+        if 'gltf' in pipeline_result:
+            gltf_content = pipeline_result['gltf']
+            print(f"GLTF content type: {type(gltf_content)}")
+            print(f"GLTF content length: {len(gltf_content) if gltf_content else 'None'}")
+            if gltf_content:
+                print(f"GLTF starts with: {gltf_content[:50]}")
+                print(f"GLTF ends with: {gltf_content[-50:]}")
+        else:
+            print("NO GLTF CONTENT IN PIPELINE RESULT!")
+        
+        print(f"=== END PIPELINE DEBUG ===")
+        
+        # Create custom response to avoid potential jsonify truncation
+        json_str = json.dumps(pipeline_result, separators=(',', ':'), ensure_ascii=False)  # Compact JSON
+        response = Response(
+            json_str,
+            content_type='application/json; charset=utf-8',
+            headers={
+                'Access-Control-Allow-Origin': '*',
+                'Content-Length': str(len(json_str.encode('utf-8')))
+            }
+        )
+        
+        print(f"Response JSON length: {len(json_str)}")
+        print(f"Response bytes length: {len(json_str.encode('utf-8'))}")
+        if 'gltf' in pipeline_result:
+            print(f"GLTF content length in response: {len(pipeline_result['gltf'])}")
         return response
         
     except Exception as e:
@@ -130,16 +180,25 @@ def health_check():
     return response
 
 def execute_cadquery(python_code):
-    """Execute CadQuery code in isolated environment"""
+    """Execute CadQuery code in isolated environment with comprehensive logging"""
+    print(f"=== CADQUERY EXECUTION START ===")
+    print(f"Python code to execute:")
+    print(python_code)
+    print(f"=== CODE END ===")
+    
     try:
         # Import CadQuery (this will fail if not available, triggering fallback)
         import cadquery as cq
+        print(f"✓ CadQuery imported successfully")
         
         # Create temporary directory for execution
         with tempfile.TemporaryDirectory() as temp_dir:
+            print(f"✓ Created temp directory: {temp_dir}")
+            
             # Change to temp directory
             original_cwd = os.getcwd()
             os.chdir(temp_dir)
+            print(f"✓ Changed to temp directory")
             
             try:
                 # Prepare safe execution environment
@@ -148,44 +207,115 @@ def execute_cadquery(python_code):
                     '__name__': '__main__',
                     '__file__': 'model.py',
                     'os': os,  # Limited os access
-                    'tempfile': tempfile
+                    'tempfile': tempfile,
+                    'show_object': lambda x: None,  # Dummy function for CQ-editor compatibility
+                    'math': __import__('math')  # Include math module
                 }
+                print(f"✓ Prepared execution environment with globals: {list(exec_globals.keys())}")
                 
                 # Execute the Python code
+                print(f"⚡ Executing Python code...")
                 exec(python_code, exec_globals)
+                print(f"✓ Python code executed successfully")
+                
+                # List all files in directory
+                all_files = os.listdir('.')
+                print(f"Files in temp directory after execution: {all_files}")
                 
                 # Look for generated GLTF file
-                gltf_files = [f for f in os.listdir('.') if f.endswith('.gltf')]
+                gltf_files = [f for f in all_files if f.endswith('.gltf')]
+                print(f"GLTF files found: {gltf_files}")
                 
                 if not gltf_files:
+                    print(f"❌ No GLTF files generated!")
                     raise FileNotFoundError("No GLTF file was generated. Make sure your code includes assembly.save('output.gltf')")
                 
                 # Read the first GLTF file found
                 gltf_path = gltf_files[0]
+                print(f"✓ Reading GLTF file: {gltf_path}")
+                
+                # Get file stats
+                file_stats = os.stat(gltf_path)
+                print(f"GLTF file size: {file_stats.st_size} bytes")
+                
                 try:
                     # Try reading as text first (JSON GLTF)
                     with open(gltf_path, 'r', encoding='utf-8') as f:
                         gltf_content = f.read()
-                    return gltf_content
+                    print(f"✓ Read as JSON GLTF, length: {len(gltf_content)}")
+                    print(f"GLTF content preview: {gltf_content[:100]}...")
+                    
+                    # Validate and clean the GLTF JSON, embedding external buffers
+                    try:
+                        # Parse to validate and re-serialize to ensure clean formatting
+                        gltf_json = json.loads(gltf_content)
+                        print(f"✓ Successfully validated GLTF JSON")
+                        
+                        # Check for external buffer references and embed them
+                        if 'buffers' in gltf_json:
+                            for buffer in gltf_json['buffers']:
+                                if 'uri' in buffer and not buffer['uri'].startswith('data:'):
+                                    # External file reference - try to embed it
+                                    buffer_file = buffer['uri']
+                                    buffer_path = os.path.join('.', buffer_file)
+                                    
+                                    if os.path.exists(buffer_path):
+                                        print(f"✓ Found external buffer file: {buffer_file}")
+                                        try:
+                                            with open(buffer_path, 'rb') as f:
+                                                buffer_data = f.read()
+                                            
+                                            # Convert to base64 data URI
+                                            import base64
+                                            buffer_base64 = base64.b64encode(buffer_data).decode('utf-8')
+                                            buffer['uri'] = f"data:application/octet-stream;base64,{buffer_base64}"
+                                            
+                                            print(f"✓ Embedded buffer file {buffer_file} as data URI ({len(buffer_data)} bytes)")
+                                        except Exception as e:
+                                            print(f"⚠ Failed to embed buffer file {buffer_file}: {e}")
+                                    else:
+                                        print(f"⚠ Buffer file {buffer_file} not found, leaving as external reference")
+                        
+                        # Re-serialize with consistent formatting
+                        clean_gltf = json.dumps(gltf_json, separators=(',', ':'), ensure_ascii=False)
+                        print(f"✓ Re-serialized GLTF, length: {len(clean_gltf)}")
+                        
+                        return clean_gltf
+                    except json.JSONDecodeError as e:
+                        print(f"⚠ Failed to parse GLTF JSON: {e}")
+                        print(f"Raw content length: {len(gltf_content)}")
+                        print(f"Raw content preview: {repr(gltf_content[:200])}")
+                        return gltf_content
                 except UnicodeDecodeError:
+                    print(f"⚠ Binary GLTF detected, converting to base64")
                     # Binary GLTF - read as base64
                     import base64
                     with open(gltf_path, 'rb') as f:
                         binary_content = f.read()
                     # Return as data URL for Three.js GLTFLoader
-                    return f"data:model/gltf-binary;base64,{base64.b64encode(binary_content).decode('utf-8')}"
-                
-                return gltf_content
+                    base64_result = f"data:model/gltf-binary;base64,{base64.b64encode(binary_content).decode('utf-8')}"
+                    print(f"✓ Converted to base64, length: {len(base64_result)}")
+                    return base64_result
                 
             finally:
                 # Restore original directory
                 os.chdir(original_cwd)
+                print(f"✓ Restored original directory")
                 
-    except ImportError:
+    except ImportError as e:
+        print(f"❌ CadQuery import failed: {e}")
+        print(f"Falling back to simple GLTF generation")
         # CadQuery not available, use fallback
         return generate_fallback_gltf(python_code)
     except Exception as e:
+        print(f"❌ CadQuery execution failed with error: {str(e)}")
+        print(f"Error type: {type(e).__name__}")
+        import traceback
+        print(f"Full traceback:")
+        print(traceback.format_exc())
         raise Exception(f"CadQuery execution failed: {str(e)}")
+    finally:
+        print(f"=== CADQUERY EXECUTION END ===")
 
 def generate_fallback_gltf(python_code):
     """Generate a simple GLTF as fallback when CadQuery is not available"""
@@ -257,12 +387,24 @@ def generate_cad_pipeline(prompt: str) -> Dict[str, Any]:
 You are a CAD expert that generates structured JSON plans and Python/CadQuery code following the CAD Memory JSON specification.
 
 CRITICAL WORKFLOW:
-1. First, analyze the user's request and generate a JSON plan following this exact structure:
+1. ALWAYS generate a JSON plan FIRST following the exact CAD Memory JSON specification
+2. THEN generate Python/CadQuery code that implements the JSON plan
+3. The JSON plan is the single source of truth for geometry
+
+NATURAL LANGUAGE INTERPRETATION:
+- Convert user descriptions into structured engineering specifications
+- Infer reasonable dimensions (default 50mm for primary features)
+- Use manufacturing-friendly proportions and constraints
+- Handle geometric terms: twist, taper, fillet, chamfer, boss, groove, etc.
+
+CAD MEMORY JSON SPECIFICATION:
+You must generate JSON following this exact structure:
+
 {
   "objects": [
     {
-      "name": "unique_name",
-      "type": "Box|Cylinder|Sphere|Cone|Torus|Loft|Extrude",
+      "name": "unique_descriptive_name",
+      "type": "Box|Cylinder|Sphere|Cone|Pyramid|Loft|Extrude",
       "params": {"width": 50, "height": 50, "depth": 50},
       "transform": [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]
     }
@@ -280,18 +422,76 @@ CRITICAL WORKFLOW:
   ]
 }
 
-2. Then generate working Python/CadQuery code that implements this JSON plan.
+OBJECT TYPES AND PARAMETERS:
+- Box: width, height, depth
+- Cylinder: radius, height  
+- Sphere: radius
+- Cone: bottomRadius, topRadius, height
+- Pyramid: width, depth, height (use extrude with taper)
+- Loft: profiles (array of cross-sections with positions)
 
-RULES:
-- Use unique, descriptive names for every object
-- Include complete 4×4 transformation matrices
-- All dimensions in millimeters
-- Generate clean, executable CadQuery code
+PYTHON CODE GENERATION RULES:
+- Import cadquery as cq and math if needed
+- Create objects using CadQuery operations: box(), cylinder(), sphere(), extrude()
+- For pyramids: use rect().extrude(height, taper=-89)
+- For complex shapes: use loft() between wire profiles
+- Apply transformations: translate(), rotate(), mirror()
+- Boolean operations: union(), cut(), intersect()
+- AVOID .fillet() operations - they cause compatibility issues
+- NEVER include show_object() calls
 - Always end with: assembly = cq.Assembly(); assembly.add(result, name="part"); assembly.save("output.gltf")
 
-Your response must have TWO sections:
-1. JSON_PLAN: The structured JSON following CAD Memory specification
-2. PYTHON_CODE: Complete CadQuery code that implements the plan and exports GLTF
+SAFE CADQUERY PATTERNS:
+```python
+# Simple box
+result = cq.Workplane("XY").box(50, 50, 50)
+
+# Pyramid (safe - no fillet)
+result = cq.Workplane("XY").rect(50, 50).extrude(75, taper=-89)
+
+# Cylinder
+result = cq.Workplane("XY").cylinder(height=50, radius=25)
+
+# Loft between profiles
+bottom = cq.Workplane("XY").rect(50, 50)
+top = cq.Workplane("XY").workplane(offset=50).rect(25, 25)
+result = cq.Workplane("XY").loft([bottom.val(), top.val()])
+```
+
+GEOMETRIC INTERPRETATIONS:
+- "Pyramid" = Tapered extrusion (rect + extrude with taper)
+- "Twisted prism" = Loft between rotated polygons  
+- "Cylinder" = Basic cylinder operation
+- "Box/Cube" = Basic box operation
+- "Bracket" = L-shaped combination of boxes
+- "Gear" = Cylinder with teeth (use polarArray if needed)
+
+MANDATORY RESPONSE FORMAT:
+JSON_PLAN:
+{
+  "objects": [...],
+  "operations": [...]
+}
+
+PYTHON_CODE:
+```python
+import cadquery as cq
+
+# Implementation code here
+result = ...
+
+assembly = cq.Assembly()
+assembly.add(result, name="part")
+assembly.save("output.gltf")
+```
+
+CRITICAL REMINDERS:
+- JSON plan MUST come first
+- Use unique, descriptive object names
+- Include complete 4×4 transformation matrices
+- Avoid fillet operations (compatibility issues)
+- Test basic shapes before adding complexity
+- All dimensions in millimeters
 """
     
     try:
@@ -299,6 +499,9 @@ Your response must have TWO sections:
         max_attempts = 2
         for attempt in range(max_attempts):
             print(f"Attempt {attempt + 1} of {max_attempts}")
+            
+            # Enhanced user message construction
+            user_message = construct_cad_request(prompt)
             
             # Generate JSON plan and Python code
             ai_response = call_anthropic_api(anthropic_api_key, {
@@ -308,7 +511,7 @@ Your response must have TWO sections:
                 'system': framework_system_prompt,
                 'messages': [{
                     'role': 'user',
-                    'content': f'Generate a complete CAD pipeline for this request: "{prompt}"\n\nProvide both the JSON plan and Python/CadQuery code following the framework specification.'
+                    'content': user_message
                 }]
             })
             
@@ -556,6 +759,93 @@ assembly = cq.Assembly()
 assembly.add(result, name="box")
 assembly.save("output.gltf")
 '''
+
+def construct_cad_request(user_prompt: str) -> str:
+    """
+    Enhanced interpretation of user input to construct a complete CAD request.
+    Converts natural language descriptions into structured CAD modeling requests.
+    """
+    
+    # Clean and normalize the input
+    prompt = user_prompt.strip()
+    
+    # Keywords that indicate specific geometric operations
+    geometric_keywords = {
+        'twist': 'helical rotation',
+        'taper': 'gradual size reduction',
+        'chamfer': 'angled edge cut',
+        'fillet': 'rounded edge',
+        'boss': 'raised cylindrical feature',
+        'groove': 'recessed channel',
+        'flange': 'flat circular plate',
+        'bracket': 'L-shaped support',
+        'gear': 'toothed wheel',
+        'thread': 'helical ridge',
+        'keyway': 'rectangular slot',
+        'counterbore': 'stepped hole',
+        'countersink': 'conical recess'
+    }
+    
+    # Engineering dimension patterns
+    dimension_patterns = {
+        'small': '20mm',
+        'medium': '50mm', 
+        'large': '100mm',
+        'tiny': '10mm',
+        'huge': '200mm'
+    }
+    
+    # Material thickness suggestions
+    thickness_suggestions = {
+        'thin': '2mm wall thickness',
+        'thick': '10mm wall thickness',
+        'sheet': '3mm thickness',
+        'plate': '20mm thickness'
+    }
+    
+    # Analyze prompt for context clues
+    analysis = []
+    
+    # Check for geometric operations
+    for keyword, description in geometric_keywords.items():
+        if keyword in prompt.lower():
+            analysis.append(f"- Requires {description} ({keyword})")
+    
+    # Check for size indicators
+    for size_word, dimension in dimension_patterns.items():
+        if size_word in prompt.lower():
+            analysis.append(f"- Suggested primary dimension: {dimension}")
+    
+    # Check for thickness indicators
+    for thickness_word, suggestion in thickness_suggestions.items():
+        if thickness_word in prompt.lower():
+            analysis.append(f"- Suggested {suggestion}")
+    
+    # Construct enhanced request
+    enhanced_request = f"""
+OBJECT DESCRIPTION: {prompt}
+
+ENGINEERING INTERPRETATION:
+{chr(10).join(analysis) if analysis else "- Standard engineering practices apply"}
+
+MODELING REQUIREMENTS:
+- Create a manufacturable 3D model
+- Use appropriate dimensions and proportions
+- Include necessary engineering features
+- Ensure structural integrity
+- Apply standard manufacturing constraints
+
+TECHNICAL SPECIFICATIONS:
+- Default dimensions: 50mm primary features
+- Minimum wall thickness: 2mm
+- Standard fillet radius: 2-5mm
+- Material: General engineering plastic/metal
+- Tolerance: ±0.1mm standard
+
+Please generate both the JSON plan and Python/CadQuery code for this engineering model.
+"""
+    
+    return enhanced_request
 
 def check_modules():
     """Check which modules are available"""

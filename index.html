@@ -20,10 +20,10 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Three.js for 3D rendering -->
-    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <!-- Three.js for 3D rendering - using direct CDN links for UMD versions -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/GLTFLoader.js"></script>
 
     <style>
         :root {
@@ -1117,7 +1117,19 @@
                     aiIndicator.classList.remove('loading');
                 }
                 
-                const pipeline = await pipelineResponse.json();
+                // Debug the response before parsing
+                console.log('Response status:', pipelineResponse.status);
+                console.log('Response headers:', pipelineResponse.headers);
+                console.log('Response content-length:', pipelineResponse.headers.get('content-length'));
+                
+                // Get the raw response text first
+                const responseText = await pipelineResponse.text();
+                console.log('Raw response length:', responseText.length);
+                console.log('Raw response start:', responseText.substring(0, 200));
+                console.log('Raw response end:', responseText.substring(responseText.length - 200));
+                
+                // Now parse it
+                const pipeline = JSON.parse(responseText);
                 console.log('Pipeline response:', pipeline);
                 
                 if (!pipeline.success) {
@@ -1131,7 +1143,9 @@
                 // If GLTF is available, load it directly
                 if (pipeline.gltf) {
                     document.getElementById('viewer-status').textContent = 'Loading 3D model...';
-                    console.log('Loading GLTF model, type:', typeof pipeline.gltf, 'length:', pipeline.gltf.length);
+                    console.log('Loading GLTF model, type:', typeof pipeline.gltf, 
+                        typeof pipeline.gltf === 'string' ? 'length: ' + pipeline.gltf.length : 
+                        typeof pipeline.gltf === 'object' ? 'keys: ' + Object.keys(pipeline.gltf).length : 'unknown');
                     
                     try {
                         await loadGLTFModel(pipeline.gltf);
@@ -1139,24 +1153,35 @@
                         console.log('✓ GLTF model loaded successfully');
                     } catch (error) {
                         console.error('Error loading GLTF model:', error);
-                        document.getElementById('viewer-status').textContent = 'Error loading model - using fallback';
+                        console.error('GLTF error details:', {
+                            errorType: error.constructor.name,
+                            errorMessage: error.message,
+                            pipelineKeys: Object.keys(pipeline),
+                            hasGltf: !!pipeline.gltf,
+                            gltfType: typeof pipeline.gltf,
+                            gltfLength: pipeline.gltf ? pipeline.gltf.length : null
+                        });
                         
-                        // Fall back to JSON plan if GLTF fails
-                        if (pipeline.jsonPlan) {
-                            console.log('Falling back to JSON plan');
-                            const geometry = convertJSONPlanToGeometry(pipeline.jsonPlan);
-                            renderModel(geometry);
-                            document.getElementById('viewer-status').textContent = 'Model generated from JSON plan';
-                        }
+                        // Instead of showing a cube, show error message
+                        displayErrorMessage('GLTF_PARSE_ERROR', error.message, {
+                            hasJsonPlan: !!pipeline.jsonPlan,
+                            hasPythonCode: !!pipeline.pythonCode,
+                            pipelineError: pipeline.error || 'None'
+                        });
                     }
                 } else if (pipeline.jsonPlan) {
-                    // Fallback: Convert JSON plan to Three.js geometry
-                    document.getElementById('viewer-status').textContent = 'Rendering from JSON plan...';
-                    const geometry = convertJSONPlanToGeometry(pipeline.jsonPlan);
-                    renderModel(geometry);
-                    document.getElementById('viewer-status').textContent = 'Model generated from JSON plan';
+                    // Show error instead of fallback geometry
+                    displayErrorMessage('NO_GLTF_DATA', 'No GLTF data in pipeline response', {
+                        hasJsonPlan: true,
+                        hasPythonCode: !!pipeline.pythonCode,
+                        pipelineError: pipeline.error || 'GLTF generation failed'
+                    });
                 } else {
-                    throw new Error('No valid output received from backend');
+                    // No valid model data at all
+                    displayErrorMessage('NO_MODEL_DATA', 'No model data received from server', {
+                        pipelineKeys: Object.keys(pipeline),
+                        pipelineError: pipeline.error || 'Unknown error'
+                    });
                 }
                 
                 // Show completion message
@@ -1208,62 +1233,278 @@
             return new Promise((resolve, reject) => {
                 const loader = new THREE.GLTFLoader();
                 
-                // Check if it's a data URL (binary GLTF)
-                if (gltfContent.startsWith('data:model/gltf-binary;base64,')) {
-                    // Convert data URL to ArrayBuffer
-                    const base64Data = gltfContent.split(',')[1];
-                    const binaryString = atob(base64Data);
-                    const arrayBuffer = new ArrayBuffer(binaryString.length);
-                    const view = new Uint8Array(arrayBuffer);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        view[i] = binaryString.charCodeAt(i);
+                console.log('Loading GLTF content:', typeof gltfContent);
+                if (typeof gltfContent === 'string') {
+                    console.log('GLTF content length:', gltfContent.length);
+                    console.log('GLTF content preview:', gltfContent.substring(0, 100));
+                    console.log('GLTF content end:', gltfContent.substring(gltfContent.length - 100));
+                } else if (typeof gltfContent === 'object') {
+                    console.log('GLTF content is already an object');
+                    console.log('GLTF object keys:', Object.keys(gltfContent));
+                }
+                
+                // Enhanced format detection
+                if (typeof gltfContent === 'string') {
+                    // Handle data URL formats
+                    if (gltfContent.startsWith('data:')) {
+                        const base64Data = gltfContent.split(',')[1];
+                        const binaryString = atob(base64Data);
+                        const arrayBuffer = new ArrayBuffer(binaryString.length);
+                        const view = new Uint8Array(arrayBuffer);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            view[i] = binaryString.charCodeAt(i);
+                        }
+                        
+                        loader.parse(arrayBuffer, '', (gltf) => {
+                            loadGLTFScene(gltf, resolve);
+                        }, (error) => {
+                            console.error('Binary GLTF parsing error:', error);
+                            reject(error);
+                        });
+                    } 
+                    // Handle JSON string
+                    else if (gltfContent.trim().startsWith('{')) {
+                        try {
+                            // Validate JSON is complete and properly formatted
+                            const trimmedContent = gltfContent.trim();
+                            
+                            // Check for basic JSON structure
+                            if (!trimmedContent.startsWith('{') || !trimmedContent.endsWith('}')) {
+                                console.error('GLTF JSON appears malformed - does not start/end with {}');
+                                console.error('First 100 chars:', trimmedContent.substring(0, 100));
+                                console.error('Last 100 chars:', trimmedContent.substring(trimmedContent.length - 100));
+                                reject(new Error('GLTF JSON appears malformed'));
+                                return;
+                            }
+                            
+                            // Check for basic GLTF structure
+                            if (!trimmedContent.includes('"accessors"') || !trimmedContent.includes('"scenes"')) {
+                                console.error('GLTF JSON missing required fields');
+                                reject(new Error('GLTF JSON missing required fields'));
+                                return;
+                            }
+                            
+                            console.log('Attempting to parse GLTF JSON...');
+                            const gltfData = JSON.parse(trimmedContent);
+                            console.log('GLTF JSON parsed successfully');
+                            console.log('Parsed GLTF object keys:', Object.keys(gltfData));
+                            console.log('GLTF asset version:', gltfData.asset?.version);
+                            
+                            // Validate essential GLTF structure
+                            if (!gltfData.scenes || !gltfData.accessors) {
+                                console.error('Parsed GLTF missing required structure');
+                                reject(new Error('Parsed GLTF missing required structure'));
+                                return;
+                            }
+                            
+                            // Debug what we're actually sending to the loader
+                            console.log('Sending to GLTFLoader:');
+                            console.log('Type:', typeof gltfData);
+                            console.log('Constructor:', gltfData.constructor.name);
+                            console.log('JSON.stringify length:', JSON.stringify(gltfData).length);
+                            
+                            // Try passing the JSON string instead of the parsed object
+                            console.log('Trying to pass JSON string to loader instead of object');
+                            loader.parse(trimmedContent, '', (gltf) => {
+                                loadGLTFScene(gltf, resolve);
+                            }, (error) => {
+                                console.error('JSON GLTF parsing error:', error);
+                                console.error('Error occurred in Three.js GLTFLoader');
+                                reject(error);
+                            });
+                        } catch (parseError) {
+                            console.error('GLTF JSON parsing error:', parseError);
+                            console.error('Content length:', gltfContent.length);
+                            console.error('First 200 chars:', gltfContent.substring(0, 200));
+                            console.error('Last 200 chars:', gltfContent.substring(gltfContent.length - 200));
+                            reject(parseError);
+                        }
                     }
-                    
-                    // Parse binary GLTF
-                    loader.parse(arrayBuffer, '', (gltf) => {
+                    // Handle raw base64 (without data URL prefix)
+                    else {
+                        try {
+                            const binaryString = atob(gltfContent);
+                            const arrayBuffer = new ArrayBuffer(binaryString.length);
+                            const view = new Uint8Array(arrayBuffer);
+                            for (let i = 0; i < binaryString.length; i++) {
+                                view[i] = binaryString.charCodeAt(i);
+                            }
+                            
+                            loader.parse(arrayBuffer, '', (gltf) => {
+                                loadGLTFScene(gltf, resolve);
+                            }, (error) => {
+                                console.error('Raw base64 GLTF parsing error:', error);
+                                reject(error);
+                            });
+                        } catch (base64Error) {
+                            console.error('Base64 decode error:', base64Error);
+                            reject(base64Error);
+                        }
+                    }
+                } else if (typeof gltfContent === 'object') {
+                    // Handle object (already parsed JSON)
+                    loader.parse(gltfContent, '', (gltf) => {
                         loadGLTFScene(gltf, resolve);
                     }, (error) => {
-                        console.error('Binary GLTF parsing error:', error);
+                        console.error('Object GLTF parsing error:', error);
                         reject(error);
                     });
                 } else {
-                    // Parse JSON GLTF
-                    try {
-                        const gltfData = typeof gltfContent === 'string' ? JSON.parse(gltfContent) : gltfContent;
-                        loader.parse(gltfData, '', (gltf) => {
-                            loadGLTFScene(gltf, resolve);
-                        }, (error) => {
-                            console.error('JSON GLTF parsing error:', error);
-                            reject(error);
-                        });
-                    } catch (parseError) {
-                        console.error('GLTF content parsing error:', parseError);
-                        reject(parseError);
-                    }
+                    reject(new Error('Invalid GLTF content type: ' + typeof gltfContent));
                 }
             });
         }
         
+        function displayErrorMessage(errorType, errorMessage, debugInfo) {
+            console.error(`=== ${errorType} ===`);
+            console.error(`Error: ${errorMessage}`);
+            console.error(`Debug info:`, debugInfo);
+            
+            // Clear previous model
+            if (currentModel) {
+                scene.remove(currentModel);
+                currentModel = null;
+            }
+            
+            // Create error display in the 3D viewer
+            const errorDiv = document.createElement('div');
+            errorDiv.style.position = 'absolute';
+            errorDiv.style.top = '50%';
+            errorDiv.style.left = '50%';
+            errorDiv.style.transform = 'translate(-50%, -50%)';
+            errorDiv.style.background = 'rgba(247, 113, 113, 0.9)';
+            errorDiv.style.color = 'white';
+            errorDiv.style.padding = '20px';
+            errorDiv.style.borderRadius = '8px';
+            errorDiv.style.textAlign = 'center';
+            errorDiv.style.zIndex = '1000';
+            errorDiv.style.maxWidth = '400px';
+            errorDiv.innerHTML = `
+                <h3>3D Model Generation Error</h3>
+                <p><strong>${errorType}:</strong></p>
+                <p>${errorMessage}</p>
+                <details style="margin-top: 10px; text-align: left;">
+                    <summary>Debug Information</summary>
+                    <pre style="font-size: 12px; margin-top: 10px;">${JSON.stringify(debugInfo, null, 2)}</pre>
+                </details>
+                <p style="margin-top: 15px; font-size: 14px;">Check browser console for detailed logs.</p>
+            `;
+            
+            const viewer = document.getElementById('viewer');
+            viewer.appendChild(errorDiv);
+            
+            // Update status
+            document.getElementById('viewer-status').textContent = `Error: ${errorType}`;
+            
+            // Remove error after 10 seconds or on click
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 10000);
+            
+            errorDiv.addEventListener('click', () => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            });
+        }
+
         function loadGLTFScene(gltf, resolve) {
             // Clear previous model
             if (currentModel) {
                 scene.remove(currentModel);
             }
             
-            // Add new model
+            // Validate GLTF scene
+            if (!gltf || !gltf.scene) {
+                console.error('Invalid GLTF: no scene found');
+                resolve(null);
+                return;
+            }
+            
             const model = gltf.scene;
+            
+            // Check if model has any geometry
+            let hasGeometry = false;
+            model.traverse((child) => {
+                if (child.geometry) {
+                    hasGeometry = true;
+                }
+            });
+            
+            if (!hasGeometry) {
+                console.error('GLTF model has no geometry');
+                resolve(null);
+                return;
+            }
+            
+            console.log('GLTF model loaded successfully, children:', model.children.length);
+            
+            // Detailed model inspection
+            console.log('Model structure:');
+            model.traverse((child) => {
+                console.log('  Child:', child.type, 'name:', child.name, 'visible:', child.visible);
+                if (child.geometry) {
+                    console.log('    Geometry:', child.geometry.type, 'vertices:', child.geometry.attributes.position?.count);
+                }
+                if (child.material) {
+                    console.log('    Material:', child.material.type, 'color:', child.material.color);
+                }
+            });
+            
+            // Add new model
             scene.add(model);
             currentModel = model;
             
-            // Center camera on model
+            // Calculate model bounds
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
             
+            console.log('Model bounds:', {center, size});
+            console.log('Model position:', model.position);
+            console.log('Model scale:', model.scale);
+            console.log('Model rotation:', model.rotation);
+            
+            // Improved camera positioning
             const maxSize = Math.max(size.x, size.y, size.z);
-            camera.position.set(center.x + maxSize, center.y + maxSize, center.z + maxSize);
+            
+            // Handle very small or very large models
+            let distance = maxSize * 2;
+            if (distance < 10) distance = 50;  // Minimum distance for small models
+            if (distance > 1000) distance = 1000; // Maximum distance for large models
+            
+            // Position camera at a good viewing angle
+            const cameraPos = {
+                x: center.x + distance * 0.7,
+                y: center.y + distance * 0.7,
+                z: center.z + distance * 0.7
+            };
+            
+            console.log('Camera positioning:');
+            console.log('  Distance:', distance);
+            console.log('  Center:', center);
+            console.log('  New camera position:', cameraPos);
+            
+            camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
+            camera.lookAt(center);
+            
             controls.target.copy(center);
             controls.update();
+            
+            console.log('Scene objects after adding model:', scene.children.length);
+            console.log('Current camera position:', camera.position);
+            console.log('Camera looking at:', controls.target);
+            
+            // Force render to update the view
+            if (renderer) {
+                console.log('Forcing render...');
+                renderer.render(scene, camera);
+                console.log('Render complete');
+            } else {
+                console.error('No renderer available!');
+            }
             
             resolve(model);
         }

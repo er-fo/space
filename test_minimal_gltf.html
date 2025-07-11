@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Minimal GLTF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body>
+    <h1>Test Minimal GLTF</h1>
+    <button onclick="testMinimalGLTF()">Test Minimal GLTF</button>
+    <div id="output"></div>
+
+    <script>
+        function testMinimalGLTF() {
+            const output = document.getElementById('output');
+            
+            // Create a minimal valid GLTF
+            const minimalGLTF = {
+                "asset": {
+                    "version": "2.0"
+                },
+                "scene": 0,
+                "scenes": [
+                    {
+                        "nodes": [0]
+                    }
+                ],
+                "nodes": [
+                    {
+                        "mesh": 0
+                    }
+                ],
+                "meshes": [
+                    {
+                        "primitives": [
+                            {
+                                "attributes": {
+                                    "POSITION": 0
+                                },
+                                "indices": 1
+                            }
+                        ]
+                    }
+                ],
+                "accessors": [
+                    {
+                        "bufferView": 0,
+                        "byteOffset": 0,
+                        "componentType": 5126,
+                        "count": 3,
+                        "type": "VEC3",
+                        "max": [1.0, 1.0, 0.0],
+                        "min": [-1.0, -1.0, 0.0]
+                    },
+                    {
+                        "bufferView": 1,
+                        "byteOffset": 0,
+                        "componentType": 5123,
+                        "count": 3,
+                        "type": "SCALAR"
+                    }
+                ],
+                "bufferViews": [
+                    {
+                        "buffer": 0,
+                        "byteOffset": 0,
+                        "byteLength": 36
+                    },
+                    {
+                        "buffer": 0,
+                        "byteOffset": 36,
+                        "byteLength": 6
+                    }
+                ],
+                "buffers": [
+                    {
+                        "byteLength": 42,
+                        "uri": "data:application/octet-stream;base64,AAABAAIAAAAAAAAAAAAAAAAAAIA/AAABAAIAAAAAAAAAAAAAAAAAAIA/"
+                    }
+                ]
+            };
+            
+            try {
+                const loader = new THREE.GLTFLoader();
+                
+                output.innerHTML = '<h3>Testing with minimal GLTF object...</h3>';
+                
+                loader.parse(minimalGLTF, '', (gltf) => {
+                    output.innerHTML += '<h3>SUCCESS: Minimal GLTF loaded</h3>';
+                    output.innerHTML += '<pre>' + JSON.stringify(gltf.scene, null, 2) + '</pre>';
+                }, (error) => {
+                    output.innerHTML += '<h3>ERROR: Minimal GLTF failed</h3>';
+                    output.innerHTML += '<pre>' + error.message + '</pre>';
+                });
+                
+                // Also test with JSON string
+                output.innerHTML += '<h3>Testing with minimal GLTF string...</h3>';
+                const gltfString = JSON.stringify(minimalGLTF);
+                
+                loader.parse(gltfString, '', (gltf) => {
+                    output.innerHTML += '<h3>SUCCESS: Minimal GLTF string loaded</h3>';
+                }, (error) => {
+                    output.innerHTML += '<h3>ERROR: Minimal GLTF string failed</h3>';
+                    output.innerHTML += '<pre>' + error.message + '</pre>';
+                });
+                
+            } catch (error) {
+                output.innerHTML += '<h3>Exception:</h3><pre>' + error.message + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>

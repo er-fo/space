@@ -16,7 +16,10 @@
       "Bash(flyctl deploy:*)",
       "Bash(python:*)",
       "Bash(find:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "mcp__ide__executeCode",
+      "Bash(flyctl status:*)",
+      "Bash(flyctl logs:*)"
     ],
     "deny": []
   }
